@@ -1,14 +1,15 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 
-// Estas informações aparecem quando crias um "Web App" no Firebase
+
 const firebaseConfig = {
-  apiKey: "API_KEY",
-  authDomain: "DOMAIN",
-  projectId: "PROJECT_ID",
-  storageBucket: "STORAGE_BUCKET",
-  messagingSenderId: "SENDER_ID",
-  appId: "APP_ID"
+  apiKey: "AIzaSyD5y4oDxigku2nNIbvyMuHj934eEmx6KDE",
+  authDomain: "flugo-3e1b2.firebaseapp.com",
+  projectId: "flugo-3e1b2",
+  storageBucket: "flugo-3e1b2.firebasestorage.app",
+  messagingSenderId: "860777731203",
+  appId: "1:860777731203:web:7ec61754340915e6d237b6",
+  measurementId: "G-P1Y1KYGFME"
 };
 
 const app = initializeApp(firebaseConfig);

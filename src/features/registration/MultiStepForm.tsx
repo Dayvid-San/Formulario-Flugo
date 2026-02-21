@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { Box, Stepper, Step, StepLabel, Button, Paper, Typography } from '@mui/material';
 import React from 'react';
+import { collection, addDoc } from "firebase/firestore";
+import { db } from "../../services/firebase";
 
-// Definimos os nomes das etapas
-const steps = ['Dados Pessoais', 'Endereço', 'Cargo e Salário'];
+const steps = ['Personal Data', 'Address', 'Position and Salary'];
 
 export const MultiStepForm = ({ onCancel }: { onCancel: () => void }) => {
   const [activeStep, setActiveStep] = useState(0);
@@ -15,18 +16,49 @@ export const MultiStepForm = ({ onCancel }: { onCancel: () => void }) => {
   };
 
   const handleNext = () => {
-    // Aqui entrará a validação do React Hook Form antes de mudar o estado
     setActiveStep((prev) => prev + 1);
   };
 
   const handleBack = () => setActiveStep((prev) => prev - 1);
 
+  const handleFinalSubmit = async (finalData: any) => {
+    const completeEmployee = {
+      ...formData,
+      ...finalData,
+      status: 'Active', 
+      createdAt: new Date().toISOString()
+    };
+  
+    try {
+      const employeesRef = collection(db, "employees");
+      
+      await addDoc(employeesRef, completeEmployee);
+      
+      alert("Employee registered successfully!");
+      
+    } catch (error) {
+      console.error("Error saving:", error);
+      alert("Error saving employee.");
+    }
+
+    const finalizeRegistration = async (completeData: any) => {
+      try {
+        await addDoc(collection(db, "employees"), {
+          ...completeData,
+          createdAt: new Date().toISOString()
+        });
+        alert("Employee saved to Firebase!");
+      } catch (e) {
+        console.error("Error saving: ", e);
+      }
+    }
+  };
+
   return (
     <Box sx={{ maxWidth: 600, mx: 'auto', mt: 8, p: 3 }}>
       <Paper sx={{ p: 4, borderRadius: 2 }}>
-        <Typography variant="h5" mb={4} fontWeight="bold">Cadastro de Funcionário</Typography>
+        <Typography variant="h5" mb={4} fontWeight="bold">Employee Registration</Typography>
         
-        {/* Indicador visual das etapas */}
         <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
           {steps.map((label) => (
             <Step key={label}>
@@ -35,24 +67,22 @@ export const MultiStepForm = ({ onCancel }: { onCancel: () => void }) => {
           ))}
         </Stepper>
 
-        {/* Conteúdo Dinâmico conforme a etapa */}
         <Box sx={{ minHeight: 200, mb: 4 }}>
-          {activeStep === 0 && <Typography>Aqui vai o formulário da Etapa 1...</Typography>}
-          {activeStep === 1 && <Typography>Aqui vai o formulário da Etapa 2...</Typography>}
-          {activeStep === 2 && <Typography>Aqui vai o formulário da Etapa 3...</Typography>}
+          {activeStep === 0 && <Typography>Here goes the form for Step 1...</Typography>}
+          {activeStep === 1 && <Typography>Here goes the form for Step 2...</Typography>}
+          {activeStep === 2 && <Typography>Here goes the form for Step 3...</Typography>}
         </Box>
 
-        {/* Botões de Navegação */}
         <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
           <Button onClick={activeStep === 0 ? onCancel : handleBack} variant="text">
-            {activeStep === 0 ? 'Cancelar' : 'Voltar'}
+            {activeStep === 0 ? 'Cancel' : 'Back'}
           </Button>
           <Button 
             variant="contained" 
             onClick={handleNext}
             sx={{ bgcolor: '#00c853', '&:hover': { bgcolor: '#00a444' } }}
           >
-            {activeStep === steps.length - 1 ? 'Finalizar' : 'Próximo'}
+            {activeStep === steps.length - 1 ? 'Finish' : 'Next'}
           </Button>
         </Box>
       </Paper>

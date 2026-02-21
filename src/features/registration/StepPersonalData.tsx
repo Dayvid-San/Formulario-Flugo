@@ -4,55 +4,52 @@ import * as z from 'zod';
 import { TextField, Button, Box, Grid, Typography } from '@mui/material';
 import React from 'react';
 
-// 1. Definição das regras de validação (Schema)
-const personalSchema = z.object({
-  nome: z.string().min(1, "O nome completo é obrigatório"),
-  email: z.string().email("Introduza um e-mail válido").min(1, "O e-mail é obrigatório"),
-  cpf: z.string().min(11, "O CPF deve ter pelo menos 11 dígitos"),
-  telefone: z.string().min(1, "O telefone é obrigatório"),
+const personalDataSchema = z.object({
+  fullName: z.string().min(1, "Full name is required"),
+  email: z.string().email("Enter a valid email").min(1, "Email is required"),
+  document: z.string().min(11, "The document must have at least 11 digits"),
+  phone: z.string().min(1, "Phone is required"),
 });
 
-// Extração do tipo através do Schema
-type PersonalFormData = z.infer<typeof personalSchema>;
+type PersonalDataFormData = z.infer<typeof personalDataSchema>;
 
 interface StepProps {
-  onNext: (data: PersonalFormData) => void;
-  data: Partial<PersonalFormData>; // Para persistir dados se o utilizador voltar
+  onNext: (data: PersonalDataFormData) => void;
+  data: Partial<PersonalDataFormData>; 
 }
 
 export const StepPersonalData = ({ onNext, data }: StepProps) => {
-  // 2. Configuração do formulário
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<PersonalFormData>({
-    resolver: zodResolver(personalSchema),
-    defaultValues: data, // Preenche com dados já existentes, se houver
+  } = useForm<PersonalDataFormData>({
+    resolver: zodResolver(personalDataSchema),
+    defaultValues: data,
   });
 
   return (
     <Box component="form" onSubmit={handleSubmit(onNext)} noValidate>
       <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
-        Dados Pessoais
+        Personal Data
       </Typography>
 
       <Grid container spacing={3}>
-        <Grid item xs={12}>
+      <Grid size={{ xs: 12 }}>
           <TextField
-            {...register('nome')}
-            label="Nome Completo"
+            {...register('fullName')}
+            label="Full Name"
             fullWidth
             required
-            error={!!errors.nome}
-            helperText={errors.nome?.message}
+            error={!!errors.fullName}
+            helperText={errors.fullName?.message}
           />
         </Grid>
 
-        <Grid item xs={12}>
+        <Grid size={{ xs: 12 }}>
           <TextField
             {...register('email')}
-            label="E-mail"
+            label="Email"
             type="email"
             fullWidth
             required
@@ -61,26 +58,26 @@ export const StepPersonalData = ({ onNext, data }: StepProps) => {
           />
         </Grid>
 
-        <Grid item xs={12} sm={6}>
+        <Grid size={{ xs: 12 }}>
           <TextField
-            {...register('cpf')}
-            label="CPF"
+            {...register('document')}
+            label="Document"
             fullWidth
             required
-            error={!!errors.cpf}
-            helperText={errors.cpf?.message}
-            inputProps={{ maxLength: 14 }} // Opcional: máscara de CPF simplificada
+            error={!!errors.document}
+            helperText={errors.document?.message}
+            inputProps={{ maxLength: 14 }}
           />
         </Grid>
 
-        <Grid item xs={12} sm={6}>
+        <Grid size={{ xs: 12 }}>
           <TextField
-            {...register('telefone')}
-            label="Telefone"
+            {...register('phone')}
+            label="Phone"
             fullWidth
             required
-            error={!!errors.telefone}
-            helperText={errors.telefone?.message}
+            error={!!errors.phone}
+            helperText={errors.phone?.message}
           />
         </Grid>
       </Grid>
@@ -95,7 +92,7 @@ export const StepPersonalData = ({ onNext, data }: StepProps) => {
             '&:hover': { bgcolor: '#00a444' } 
           }}
         >
-          Próximo
+          Next
         </Button>
       </Box>
     </Box>

@@ -12,24 +12,22 @@ interface DashboardProps {
 export const Dashboard = ({ onAddNew }: DashboardProps) => {
     return (
       <Box sx={{ display: 'flex', height: '100vh', bgcolor: '#f5f5f5' }}>
-        {/* Sidebar Simples */}
         <Box sx={{ width: 250, bgcolor: 'white', borderRight: '1px solid #ddd', p: 2 }}>
           <img src="/logo-flugo.png" alt="Flugo" style={{ width: 100, marginBottom: 40 }} />
           <Typography variant="body1" sx={{ fontWeight: 'bold', color: '#666' }}>
-            Colaboradores
+            Employees
           </Typography>
         </Box>
   
-        {/* Conteúdo Principal */}
         <Box sx={{ flexGrow: 1, p: 4 }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 4 }}>
-            <Typography variant="h4" fontWeight="bold">Colaboradores</Typography>
+            <Typography variant="h4" fontWeight="bold">Employees</Typography>
             <Button 
                 variant="contained" 
-                onClick={onAddNew} // Use a prop aqui no botão "Novo Colaborador"
+                onClick={onAddNew}
                 sx={{ bgcolor: '#00c853' }}
                 >
-                    Novo Colaborador
+                    New Employee
             </Button>
           </Box>
   
@@ -37,14 +35,13 @@ export const Dashboard = ({ onAddNew }: DashboardProps) => {
             <Table>
               <TableHead sx={{ bgcolor: '#f8f9fa' }}>
                 <TableRow>
-                  <TableCell>Nome</TableCell>
+                  <TableCell>Name</TableCell>
                   <TableCell>Email</TableCell>
-                  <TableCell>Departamento</TableCell>
+                  <TableCell>Department</TableCell>
                   <TableCell>Status</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {/* Mapeie seus dados do Firebase aqui futuramente */}
                 <TableRow>
                   <TableCell sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                     <Avatar src="/path/to/avatar.png" /> Fernanda Torres
@@ -53,9 +50,9 @@ export const Dashboard = ({ onAddNew }: DashboardProps) => {
                   <TableCell>Design</TableCell>
                   <TableCell>
                   <Chip 
-                    label="Ativo" 
+                    label="Active" 
                     color="success" 
-                    variant="outlined" // Ou remova esta linha para o preenchimento sólido
+                    variant="outlined"
                     />
                   </TableCell>
                 </TableRow>
