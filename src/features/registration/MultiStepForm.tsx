@@ -1,91 +1,101 @@
 import { useState } from 'react';
-import { Box, Stepper, Step, StepLabel, Button, Paper, Typography } from '@mui/material';
+import { Box, Stepper, Step, StepLabel, Button, Paper, Typography, LinearProgress, Breadcrumbs, Link } from '@mui/material';
 import React from 'react';
 import { collection, addDoc } from "firebase/firestore";
-import { db } from "../../services/firebase";
+import { db } from "../../services/firebase"; 
+import { StepPersonalData } from './StepPersonalData';
 
-const steps = ['Personal Data', 'Address', 'Position and Salary'];
+const steps = ['Infos Básicas', 'Endereço', 'Cargo e Salário'];
 
 export const MultiStepForm = ({ onCancel }: { onCancel: () => void }) => {
   const [activeStep, setActiveStep] = useState(0);
   const [formData, setFormData] = useState({});
 
   const handleNextStep = (stepData: any) => {
-    setFormData((prev) => ({ ...prev, ...stepData }));
-    setActiveStep((prev) => prev + 1);
-  };
-
-  const handleNext = () => {
-    setActiveStep((prev) => prev + 1);
+    const updatedData = { ...formData, ...stepData };
+    setFormData(updatedData);
+    
+    if (activeStep === steps.length - 1) {
+      handleFinalSubmit(updatedData);
+    } else {
+      setActiveStep((prev) => prev + 1);
+    }
   };
 
   const handleBack = () => setActiveStep((prev) => prev - 1);
 
-  const handleFinalSubmit = async (finalData: any) => {
-    const completeEmployee = {
-      ...formData,
-      ...finalData,
-      status: 'Active', 
-      createdAt: new Date().toISOString()
-    };
-  
+  const handleFinalSubmit = async (allData: any) => {
     try {
-      const employeesRef = collection(db, "employees");
+      const colaboradoresRef = collection(db, "colaboradores");
+      await addDoc(colaboradoresRef, {
+        ...allData,
+        status: allData.ativo ? 'Ativo' : 'Inativo',
+        createdAt: new Date().toISOString()
+      });
       
-      await addDoc(employeesRef, completeEmployee);
-      
-      alert("Employee registered successfully!");
-      
+      alert("Colaborador cadastrado com sucesso!");
+      onCancel();
     } catch (error) {
-      console.error("Error saving:", error);
-      alert("Error saving employee.");
-    }
-
-    const finalizeRegistration = async (completeData: any) => {
-      try {
-        await addDoc(collection(db, "employees"), {
-          ...completeData,
-          createdAt: new Date().toISOString()
-        });
-        alert("Employee saved to Firebase!");
-      } catch (e) {
-        console.error("Error saving: ", e);
-      }
+      console.error("Erro ao salvar:", error);
+      alert("Erro ao salvar o colaborador.");
     }
   };
 
   return (
-    <Box sx={{ maxWidth: 600, mx: 'auto', mt: 8, p: 3 }}>
-      <Paper sx={{ p: 4, borderRadius: 2 }}>
-        <Typography variant="h5" mb={4} fontWeight="bold">Employee Registration</Typography>
-        
-        <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
-          {steps.map((label) => (
-            <Step key={label}>
-              <StepLabel>{label}</StepLabel>
-            </Step>
-          ))}
-        </Stepper>
+    <Box sx={{ width: '100%', minHeight: '100vh', bgcolor: '#f5f5f5', pt: 4 }}>
+      <LinearProgress 
+        variant="determinate" 
+        value={(activeStep / (steps.length - 1)) * 100} 
+        sx={{ position: 'fixed', top: 0, left: 0, right: 0, height: 4, bgcolor: '#eee', '& .MuiLinearProgress-bar': { bgcolor: '#00c853' } }} 
+      />
 
-        <Box sx={{ minHeight: 200, mb: 4 }}>
-          {activeStep === 0 && <Typography>Here goes the form for Step 1...</Typography>}
-          {activeStep === 1 && <Typography>Here goes the form for Step 2...</Typography>}
-          {activeStep === 2 && <Typography>Here goes the form for Step 3...</Typography>}
-        </Box>
+      <Box sx={{ maxWidth: 800, mx: 'auto', px: 3 }}>
+        <Breadcrumbs sx={{ mb: 3 }}>
+          <Link underline="hover" color="inherit" href="/" onClick={(e) => { e.preventDefault(); onCancel(); }}>
+            Colaboradores
+          </Link>
+          <Typography color="text.primary" sx={{ fontWeight: 'bold' }}>Cadastrar Colaborador</Typography>
+        </Breadcrumbs>
 
-        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-          <Button onClick={activeStep === 0 ? onCancel : handleBack} variant="text">
-            {activeStep === 0 ? 'Cancel' : 'Back'}
-          </Button>
-          <Button 
-            variant="contained" 
-            onClick={handleNext}
-            sx={{ bgcolor: '#00c853', '&:hover': { bgcolor: '#00a444' } }}
-          >
-            {activeStep === steps.length - 1 ? 'Finish' : 'Next'}
-          </Button>
-        </Box>
-      </Paper>
+        <Paper sx={{ p: 4, borderRadius: 3, boxShadow: '0px 4px 20px rgba(0,0,0,0.05)' }}>
+          <Stepper activeStep={activeStep} sx={{ mb: 5, '& .MuiStepIcon-root.Mui-active, & .MuiStepIcon-root.Mui-completed': { color: '#00c853' } }}>
+            {steps.map((label) => (
+              <Step key={label}>
+                <StepLabel>{label}</StepLabel>
+              </Step>
+            ))}
+          </Stepper>
+
+          <Box sx={{ minHeight: 300 }}>
+            {activeStep === 0 && (
+              <StepPersonalData 
+                onNext={handleNextStep} 
+                data={formData} 
+              />
+            )}
+            
+            {activeStep === 1 && (
+              <Box>
+                <Typography variant="h5" sx={{ mb: 3, fontWeight: 'bold', color: '#455a64' }}>Endereço</Typography>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
+                  <Button onClick={handleBack} sx={{ color: '#90a4ae' }}>Voltar</Button>
+                  <Button variant="contained" onClick={() => handleNextStep({})} sx={{ bgcolor: '#00c853' }}>Próximo</Button>
+                </Box>
+              </Box>
+            )}
+
+            {activeStep === 2 && (
+              <Box>
+                <Typography variant="h5" sx={{ mb: 3, fontWeight: 'bold', color: '#455a64' }}>Cargo e Salário</Typography>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
+                  <Button onClick={handleBack} sx={{ color: '#90a4ae' }}>Voltar</Button>
+                  <Button variant="contained" onClick={() => handleNextStep({})} sx={{ bgcolor: '#00c853' }}>Finalizar</Button>
+                </Box>
+              </Box>
+            )}
+          </Box>
+        </Paper>
+      </Box>
     </Box>
   );
 };

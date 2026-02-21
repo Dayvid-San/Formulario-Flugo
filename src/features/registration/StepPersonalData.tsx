@@ -57,29 +57,6 @@ export const StepPersonalData = ({ onNext, data }: StepProps) => {
             helperText={errors.email?.message}
           />
         </Grid>
-
-        <Grid size={{ xs: 12 }}>
-          <TextField
-            {...register('document')}
-            label="Document"
-            fullWidth
-            required
-            error={!!errors.document}
-            helperText={errors.document?.message}
-            inputProps={{ maxLength: 14 }}
-          />
-        </Grid>
-
-        <Grid size={{ xs: 12 }}>
-          <TextField
-            {...register('phone')}
-            label="Phone"
-            fullWidth
-            required
-            error={!!errors.phone}
-            helperText={errors.phone?.message}
-          />
-        </Grid>
       </Grid>
 
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 4 }}>
