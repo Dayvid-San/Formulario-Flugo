@@ -12,7 +12,6 @@ import {
 } from '@mui/material';
 import React from 'react';
 
-// Validação com Zod
 const personalSchema = z.object({
   titulo: z.string().min(1, "O título (nome) é obrigatório"),
   email: z.string().email("E-mail inválido").min(1, "O e-mail é obrigatório"),
@@ -21,7 +20,7 @@ const personalSchema = z.object({
 
 type PersonalFormData = z.infer<typeof personalSchema>;
 
-export const StepPersonalData = ({ onNext, data }: any) => {
+export const StepPersonalData = ({ onNext, data, onCancel }: any) => {
   const { register, handleSubmit, control, formState: { errors } } = useForm<PersonalFormData>({
     resolver: zodResolver(personalSchema),
     defaultValues: {
@@ -31,35 +30,34 @@ export const StepPersonalData = ({ onNext, data }: any) => {
     }
   });
 
+  const greenInputStyle = {
+    '& label.Mui-focused': { color: '#00c853' },
+    '& .MuiOutlinedInput-root': {
+      '&.Mui-focused fieldset': { borderColor: '#00c853', borderWidth: '2px' },
+    }
+  };
+
   return (
-    <Box component="form" onSubmit={handleSubmit(onNext)}>
-      <Typography variant="h6" sx={{ mb: 3, fontWeight: 'bold', color: '#455a64' }}>
+    <Box component="form" onSubmit={handleSubmit(onNext)} sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      
+      <Typography variant="h5" sx={{ mb: 4, fontWeight: 'bold', color: '#546e7a' }}>
         Informações Básicas
       </Typography>
       
-      <Grid container spacing={3}>
-        {/* Campo Título */}
+      <Grid container spacing={4} sx={{ flexGrow: 1 }}>
         <Grid size={{ xs: 12 }}>
           <TextField 
-            {...register('titulo')} 
-            label="Título" 
-            fullWidth 
-            placeholder="João da Silva"
-            error={!!errors.titulo} 
-            helperText={errors.titulo?.message}
-            sx={{ '& .MuiOutlinedInput-root.Mui-focused fieldset': { borderColor: '#00c853' } }}
+            {...register('titulo')} label="Título" fullWidth placeholder="João da Silva"
+            error={!!errors.titulo} helperText={errors.titulo?.message}
+            InputLabelProps={{ shrink: true }} sx={greenInputStyle}
           />
         </Grid>
         
         <Grid size={{ xs: 12 }}>
           <TextField 
-            {...register('email')} 
-            label="E-mail" 
-            fullWidth 
-            placeholder="e.g. john@gmail.com"
-            error={!!errors.email} 
-            helperText={errors.email?.message} 
-            sx={{ '& .MuiOutlinedInput-root.Mui-focused fieldset': { borderColor: '#00c853' } }}
+            {...register('email')} label="E-mail" fullWidth placeholder="e.g. john@gmail.com"
+            error={!!errors.email} helperText={errors.email?.message} 
+            InputLabelProps={{ shrink: true }} sx={greenInputStyle}
           />
         </Grid>
 
@@ -67,33 +65,25 @@ export const StepPersonalData = ({ onNext, data }: any) => {
           <FormControlLabel
             control={
               <Controller
-                name="ativo"
-                control={control}
+                name="ativo" control={control}
                 render={({ field }) => (
-                  <Switch 
-                    {...field} 
-                    checked={field.value} 
+                  <Switch {...field} checked={field.value} 
                     sx={{ '& .MuiSwitch-switchBase.Mui-checked': { color: '#00c853' }, '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { bgcolor: '#00c853' } }}
                   />
                 )}
               />
             }
-            label="Ativar ao criar"
+            label={<Typography sx={{ color: '#546e7a', fontSize: '0.9rem' }}>Ativar ao criar</Typography>}
           />
         </Grid>
       </Grid>
 
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 4 }}>
-        <Button 
-          type="submit" 
-          variant="contained" 
-          sx={{ 
-            bgcolor: '#00c853', 
-            '&:hover': { bgcolor: '#00a444' },
-            textTransform: 'none',
-            px: 4
-          }}
-        >
+      {/* Botões - Fixos na base do contêiner */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 8 }}>
+        <Button onClick={onCancel} sx={{ color: '#9e9e9e', textTransform: 'none', fontWeight: 'bold' }}>
+          Voltar
+        </Button>
+        <Button type="submit" variant="contained" sx={{ bgcolor: '#00c853', '&:hover': { bgcolor: '#00a844' }, textTransform: 'none', fontWeight: 'bold', px: 4, borderRadius: 2 }}>
           Próximo
         </Button>
       </Box>

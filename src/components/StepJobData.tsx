@@ -1,7 +1,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { TextField, Button, Box, Grid, Typography } from '@mui/material';
+import { TextField, Button, Box, Grid, Typography, MenuItem } from '@mui/material';
 import React from 'react';
 
 const jobSchema = z.object({
@@ -14,44 +14,71 @@ type JobFormData = z.infer<typeof jobSchema>;
 export const StepJobData = ({ onNext, onBack, data }: any) => {
   const { register, handleSubmit, formState: { errors } } = useForm<JobFormData>({
     resolver: zodResolver(jobSchema),
-    defaultValues: data
+    defaultValues: {
+      cargo: data?.cargo || "",
+      salario: data?.salario || ""
+    }
   });
 
+  const greenInputStyle = {
+    '& label.Mui-focused': { color: '#00c853' },
+    '& .MuiOutlinedInput-root': {
+      '&.Mui-focused fieldset': { borderColor: '#00c853', borderWidth: '2px' },
+    }
+  };
+
+  // Lista de cargos/departamentos para o Select
+  const opcoesCargos = [
+    { value: "Desenvolvedor Front-end", label: "Desenvolvedor Front-end" },
+    { value: "Desenvolvedor Back-end", label: "Desenvolvedor Back-end" },
+    { value: "Desenvolvedor Full-stack", label: "Desenvolvedor Full-stack" },
+    { value: "Designer UI/UX", label: "Designer UI/UX" },
+    { value: "Recursos Humanos", label: "Recursos Humanos" },
+    { value: "Financeiro", label: "Financeiro" },
+  ];
+
   return (
-    <Box component="form" onSubmit={handleSubmit(onNext)}>
-      <Typography variant="h5" sx={{ mb: 4, fontWeight: 'bold', color: '#455a64' }}>
-        Cargo e Salário
+    <Box component="form" onSubmit={handleSubmit(onNext)} sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      
+      <Typography variant="h5" sx={{ mb: 4, fontWeight: 'bold', color: '#546e7a' }}>
+        Informações Profissionais
       </Typography>
       
-      <Grid container spacing={3}>
-        <Grid size={{ xs: 12, sm: 6 }}>
+      <Grid container spacing={4} sx={{ flexGrow: 1 }}>
+        <Grid size={{ xs: 12 }}>
+          {/* Transformado em Select */}
           <TextField 
+            select
             {...register('cargo')} 
-            label="Cargo (Ex: Desenvolvedor Front-end)" 
+            label="Selecione um departamento/cargo" 
             fullWidth 
             error={!!errors.cargo} 
             helperText={errors.cargo?.message} 
-          />
-        </Grid>
-        
-        <Grid size={{ xs: 12, sm: 6 }}>
-          <TextField 
-            {...register('salario')} 
-            label="Salário (Ex: R$ 5.000,00)" 
-            fullWidth 
-            error={!!errors.salario} 
-            helperText={errors.salario?.message} 
-          />
+            InputLabelProps={{ shrink: true }} 
+            sx={greenInputStyle}
+          >
+            {/* Opção padrão desabilitada para forçar a escolha */}
+            <MenuItem value="" disabled>
+              <em>Selecione...</em>
+            </MenuItem>
+            
+            {/* Mapeando as opções para criar a lista */}
+            {opcoesCargos.map((opcao) => (
+              <MenuItem key={opcao.value} value={opcao.value}>
+                {opcao.label}
+              </MenuItem>
+            ))}
+          </TextField>
         </Grid>
       </Grid>
 
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 10 }}>
-        <Button onClick={onBack} sx={{ color: '#90a4ae', textTransform: 'none' }}>
+      {/* Botões - Voltar e Concluir */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 8 }}>
+        <Button onClick={onBack} sx={{ color: '#9e9e9e', textTransform: 'none', fontWeight: 'bold' }}>
           Voltar
         </Button>
-        {/* Como é a última etapa, o botão muda para Finalizar */}
-        <Button type="submit" variant="contained" sx={{ bgcolor: '#00c853', px: 4, py: 1, textTransform: 'none' }}>
-          Finalizar
+        <Button type="submit" variant="contained" sx={{ bgcolor: '#00c853', '&:hover': { bgcolor: '#00a844' }, textTransform: 'none', fontWeight: 'bold', px: 4, borderRadius: 2 }}>
+          Concluir
         </Button>
       </Box>
     </Box>
