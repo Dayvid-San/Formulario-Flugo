@@ -1,17 +1,20 @@
 import { useState } from 'react';
-import { Box, Stepper, Step, StepLabel, Button, Paper, Typography, LinearProgress, Breadcrumbs, Link } from '@mui/material';
+import { Box, Stepper, Step, StepLabel, Button, Paper, Typography, LinearProgress, Breadcrumbs, Link, Dialog, DialogContent } from '@mui/material';
 import React from 'react';
 import { collection, addDoc } from "firebase/firestore";
 import { db } from "../../services/firebase"; 
 import { StepPersonalData } from '../../components/StepPersonalData';
 import { StepAddressData } from '../../components/StepAddressData';
 import { StepJobData } from '../../components/StepJobData';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+
 
 const steps = ['Infos Básicas', 'Endereço', 'Cargo e Salário'];
 
 export const MultiStepForm = ({ onCancel }: { onCancel: () => void }) => {
   const [activeStep, setActiveStep] = useState(0);
   const [formData, setFormData] = useState({});
+  const [openSuccess, setOpenSuccess] = useState(false);
 
   const handleNextStep = (stepData: any) => {
     const updatedData = { ...formData, ...stepData };
@@ -28,6 +31,7 @@ export const MultiStepForm = ({ onCancel }: { onCancel: () => void }) => {
 
   const handleFinalSubmit = async (allData: any) => {
     try {
+      console.log("Iniciando salvamento no Firebase...");
       const colaboradoresRef = collection(db, "colaboradores");
       await addDoc(colaboradoresRef, {
         ...allData,
@@ -35,11 +39,11 @@ export const MultiStepForm = ({ onCancel }: { onCancel: () => void }) => {
         createdAt: new Date().toISOString()
       });
       
-      alert("Colaborador cadastrado com sucesso!");
-      onCancel(); 
+      console.log("Sucesso! Abrindo Modal..."); 
+      setOpenSuccess(true); 
       
     } catch (error) {
-      console.error("ERRO DETALHADO DO FIREBASE:", error); 
+      console.error("Erro ao salvar:", error);
       alert("Erro ao salvar o colaborador.");
     }
   };
@@ -107,7 +111,43 @@ export const MultiStepForm = ({ onCancel }: { onCancel: () => void }) => {
             )}
           </Box>
         </Paper>
+        <Box>
+          <Dialog 
+            open={openSuccess} 
+            PaperProps={{ sx: { borderRadius: 3, p: 2, textAlign: 'center', maxWidth: 400 } }}
+          >
+            <DialogContent>
+              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                <CheckCircleOutlineIcon sx={{ fontSize: 80, color: '#00c853' }} />
+                
+                <Typography variant="h6" fontWeight="bold">
+                  Colaborador cadastrado com sucesso!
+                </Typography>
+
+                <Button 
+                  variant="contained" 
+                  fullWidth
+                  onClick={() => {
+                    setOpenSuccess(false);
+                    onCancel(); // Volta para a listagem
+                  }}
+                  sx={{ 
+                    bgcolor: '#00c853', 
+                    '&:hover': { bgcolor: '#00a844' },
+                    mt: 2,
+                    textTransform: 'none',
+                    borderRadius: 2,
+                    fontWeight: 'bold'
+                  }}
+                >
+                  OK
+                </Button>
+              </Box>
+            </DialogContent>
+          </Dialog>
+        </Box>
       </Box>
+      
     </Box>
   );
 };
