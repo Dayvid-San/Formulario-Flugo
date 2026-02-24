@@ -17,7 +17,6 @@ export const MultiStepForm = ({ onCancel }: { onCancel: () => void }) => {
     const updatedData = { ...formData, ...stepData };
     setFormData(updatedData);
     
-    // Se for a última etapa (2), salva no banco. Senão, avança.
     if (activeStep === steps.length - 1) {
       handleFinalSubmit(updatedData);
     } else {
@@ -40,7 +39,6 @@ export const MultiStepForm = ({ onCancel }: { onCancel: () => void }) => {
       onCancel(); 
       
     } catch (error) {
-      // É AQUI que você coloca o código de log detalhado
       console.error("ERRO DETALHADO DO FIREBASE:", error); 
       alert("Erro ao salvar o colaborador.");
     }
@@ -48,7 +46,6 @@ export const MultiStepForm = ({ onCancel }: { onCancel: () => void }) => {
 
   return (
     <Box sx={{ width: '100%', minHeight: '100vh', bgcolor: '#f5f5f5', pt: 4 }}>
-      {/* Barra de progresso verde no topo */}
       <LinearProgress 
         variant="determinate" 
         value={(activeStep / (steps.length - 1)) * 100} 
@@ -86,7 +83,6 @@ export const MultiStepForm = ({ onCancel }: { onCancel: () => void }) => {
           </Stepper>
 
           <Box sx={{ minHeight: 300 }}>
-            {/* ETAPA 0: DADOS PESSOAIS */}
             {activeStep === 0 && (
               <StepPersonalData 
                 onNext={handleNextStep} 
@@ -94,7 +90,6 @@ export const MultiStepForm = ({ onCancel }: { onCancel: () => void }) => {
               />
             )}
             
-            {/* ETAPA 1: ENDEREÇO (Agora usando o seu componente!) */}
             {activeStep === 1 && (
               <StepAddressData 
                 onNext={handleNextStep} 
@@ -103,7 +98,6 @@ export const MultiStepForm = ({ onCancel }: { onCancel: () => void }) => {
               />
             )}
 
-            {/* ETAPA 2: CARGO E SALÁRIO (Agora usando o seu componente!) */}
             {activeStep === 2 && (
               <StepJobData 
                 onNext={handleNextStep} 
