@@ -1,76 +1,77 @@
-# React + TypeScript + Vite
+# Flugo - Gestão de Colaboradores
+
+Está responsivo, fluído, mas ainda com pequenos ruidos.
+
+## Funcionalidades Principais
+
+### 1. Dashboard
+
+* **Edição In-place**: Não há necessidade de abrir modais para edições simples. Basta clicar no Nome, Email ou Departamento diretamente na tabela para editar os dados.
+* **Avatar Editável**: O usuário pode clicar no Avatar de um colaborador para carregar uma nova foto do computador. A imagem é convertida para Base64 e salva instantaneamente.
+* **Atualização em Tempo Real**: Graças ao `onSnapshot` do Firebase, qualquer alteração feita por um usuário é refletida para todos os outros sem precisar atualizar a página.
+* **Exclusão**: Botão de ação rápida para remover registros com confirmação de segurança.
+
+### 2. Cadastro em Múltiplas Etapas (Multi-step Form)
+
+O processo de cadastro foi desenhado para ser intuitivo, evitando a sobrecarga de informações em uma única tela:
+
+* **Passo 1: Informações Básicas**: Título, E-mail e status de ativação.
+* **Passo 2: Informações Profissionais**: Seleção de cargo/departamento via dropdown para manter a integridade dos dados.
+* **Consistência Visual**: Os formulários foram ajustados para manter o alinhamento de botões e campos, garantindo que o layout não "pule" durante a navegação entre etapas.
+
+### 3. Design Responsivo
+
+* **Mobile-First**: Em dispositivos móveis, a barra lateral (Sidebar) é ocultada automaticamente para priorizar o conteúdo da tabela.
+* **Scroll de Segurança**: A tabela de colaboradores possui rolagem horizontal em telas pequenas, impedindo que os dados fiquem esmagados ou ilegíveis.
 
 
-https://www.figma.com/proto/r7xOsboMOQlMpEx8D5kH3a/Desafio-Flugo?node-id=2101-9297&t=ZcgP4ZVsOtCzzCIN-1/
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Como Executar o Projeto
 
-Currently, two official plugins are available:
+### Pré-requisitos
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+* Node.js instalado.
+* Uma conta no Firebase com um projeto Firestore ativo.
 
-## React Compiler
+### Passo a Passo
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+1. **Clone o repositório:**
+```bash
+git clone https://github.com/seu-usuario/flugo-management.git
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+2. **Instale as dependências:**
+```bash
+npm install
+# Certifique-se de ter os ícones do MUI
+npm install @mui/icons-material
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
 ```
-# Formulario-Flugo
+
+
+3. **Configuração do Firebase:**
+Crie um arquivo em `src/services/firebase.ts` com suas credenciais:
+```typescript
+const firebaseConfig = {
+  apiKey: "SUA_API_KEY",
+  authDomain: "SEU_DOMAIN",
+  projectId: "SEU_PROJECT_ID",
+  // ... restantes
+};
+
+```
+
+5. **Inicie o servidor de desenvolvimento:**
+```bash
+npm run dev
+
+```
+
+
+
+
+## Notas de Desenvolvimento
+
+Este projeto utiliza o novo **Grid v2** do Material UI. Ao dar manutenção no código, utilize a propriedade `size` em vez de `item` e `xs`, evitando erros de *overload* no TypeScript e garantindo o alinhamento perfeito dos elementos.
+
