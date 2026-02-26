@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Box, Stepper, Step, StepLabel, Button, Paper, Typography, LinearProgress, Breadcrumbs, Link, Dialog, DialogContent, Grid } from '@mui/material';
-import React from 'react';
 import { collection, addDoc } from "firebase/firestore";
 import { db } from "../../services/firebase"; 
 import { StepPersonalData } from '../../components/StepPersonalData';
@@ -18,7 +17,6 @@ export const MultiStepForm = ({ onCancel }: { onCancel: () => void }) => {
     const updatedData = { ...formData, ...stepData };
     setFormData(updatedData);
     
-    // Como parece que o endereço sumiu nas imagens, adaptei para 2 passos
     if (activeStep === stepsLabels.length - 1) { 
       handleFinalSubmit(updatedData);
     } else {
@@ -43,13 +41,11 @@ export const MultiStepForm = ({ onCancel }: { onCancel: () => void }) => {
     }
   };
 
-  // Cálculo da porcentagem da barra (0% no primeiro, 50% no segundo, 100% ao enviar)
   const progressValue = activeStep === 0 ? 0 : 50;
 
   return (
     <Box sx={{ width: '100%', minHeight: '100vh', bgcolor: '#ffffff', p: 4 }}>
       
-      {/* HEADER: Breadcrumbs e Barra de Progresso */}
       <Box sx={{ mb: 4, maxWidth: 1000 }}>
         <Breadcrumbs separator="•" sx={{ mb: 2, color: '#757575', fontSize: '0.9rem' }}>
           <Link underline="hover" color="inherit" sx={{ cursor: 'pointer' }} onClick={() => onCancel()}>
@@ -76,10 +72,8 @@ export const MultiStepForm = ({ onCancel }: { onCancel: () => void }) => {
         </Box>
       </Box>
 
-      {/* CORPO DO FORMULÁRIO (2 Colunas) */}
       <Grid container spacing={4} sx={{ maxWidth: 1000 }}>
         
-        {/* Coluna Esquerda: Indicadores de Passo (Customizados) */}
         <Grid size={{ xs: 12, md: 3 }}>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, pt: 1 }}>
             {stepsLabels.map((label, index) => {
@@ -113,13 +107,11 @@ export const MultiStepForm = ({ onCancel }: { onCancel: () => void }) => {
           </Box>
         </Grid>
 
-        {/* Coluna Direita: O Formulário em si */}
         <Grid size={{ xs: 12, md: 9 }}>
           <Box sx={{ minHeight: 400 }}>
             {activeStep === 0 && (
               <StepPersonalData onNext={handleNextStep} onCancel={onCancel} data={formData} />
             )}
-            {/* Adaptei para pular direto pro JobData baseado na imagem "Infos Profissionais" */}
             {activeStep === 1 && (
               <StepJobData onNext={handleNextStep} onBack={handleBack} data={formData} />
             )}
@@ -127,7 +119,6 @@ export const MultiStepForm = ({ onCancel }: { onCancel: () => void }) => {
         </Grid>
       </Grid>
 
-      {/* DIALOG DE SUCESSO (Fora do fluxo de renderização principal) */}
       <Dialog open={openSuccess} PaperProps={{ sx: { borderRadius: 3, p: 2, textAlign: 'center', maxWidth: 400 } }}>
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
