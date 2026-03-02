@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
-
+import { getAuth } from "firebase/auth"; // 1. Adicione este import para autenticação
 
 const firebaseConfig = {
   apiKey: "AIzaSyD5y4oDxigku2nNIbvyMuHj934eEmx6KDE",
@@ -12,5 +12,11 @@ const firebaseConfig = {
   measurementId: "G-P1Y1KYGFME"
 };
 
+// Inicializa o Firebase
 const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app); // Este 'db' será usado para salvar os funcionários
+
+// 2. Inicialize e exporte o serviço de Autenticação
+export const auth = getAuth(app); 
+
+// 3. Mantenha a exportação do Firestore para o CRUD de colaboradores
+export const db = getFirestore(app);
