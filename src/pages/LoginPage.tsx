@@ -1,11 +1,15 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword 
+} from 'firebase/auth'; // Importado para criação de conta
 import { auth } from '../services/firebase';
 import { 
   Box, Typography, TextField, Button, 
-  InputAdornment, IconButton, Link, Alert, Grid
+  InputAdornment, IconButton, Link, Alert
 } from '@mui/material';
+import Grid from '@mui/material/Grid';
 import MailOutlinedIcon from '@mui/icons-material/MailOutlined';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import VisibilityIcon from '@mui/icons-material/Visibility';
@@ -13,6 +17,7 @@ import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import LogoFlugo from '../../public/logo-flugo.png'; 
 
 export const LoginPage = () => {
+  const [isRegistering, setIsRegistering] = useState(false); // Estado para alternar Telas
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -21,31 +26,36 @@ export const LoginPage = () => {
 
   const navigate = useNavigate();
   const location = useLocation();
-
-  // Define para onde redirecionar após o login (padrão é o dashboard '/')
   const from = location.state?.from?.pathname || "/";
 
-  const handleLogin = async (event: React.FormEvent) => {
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setError(null);
     setLoading(true);
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      if (isRegistering) {
+        // Lógica de Criação de Conta
+        await createUserWithEmailAndPassword(auth, email, password);
+      } else {
+        // Lógica de Login
+        await signInWithEmailAndPassword(auth, email, password);
+      }
       navigate(from, { replace: true });
     } catch (err: any) {
-      console.error("Erro no login:", err);
-      // Mensagens de erro mais amigáveis baseadas no código do Firebase
+      console.error("Erro na autenticação:", err);
       switch (err.code) {
-        case 'auth/user-not-found':
-        case 'auth/wrong-password':
+        case 'auth/email-already-in-use':
+          setError('Este e-mail já está em uso.');
+          break;
+        case 'auth/weak-password':
+          setError('A senha deve ter pelo menos 6 caracteres.');
+          break;
+        case 'auth/invalid-credential':
           setError('E-mail ou senha incorretos.');
           break;
-        case 'auth/invalid-email':
-          setError('Formato de e-mail inválido.');
-          break;
         default:
-          setError('Ocorreu um erro ao tentar fazer login. Tente novamente.');
+          setError('Erro ao processar solicitação. Verifique os dados.');
       }
     } finally {
       setLoading(false);
@@ -54,7 +64,7 @@ export const LoginPage = () => {
 
   return (
     <Box sx={{ width: '100vw', height: '100vh', display: 'flex', overflow: 'hidden' }}>
-      <Grid container>
+      <Grid container sx={{ width: '100%' }}>
         {/* Lado Esquerdo: Branding */}
         <Grid item xs={12} md={6} sx={{ 
           bgcolor: '#f5f5f5', 
@@ -70,7 +80,7 @@ export const LoginPage = () => {
           <Typography variant="body1" color="#999" sx={{ mt: 1 }}>Simplificando seu RH.</Typography>
         </Grid>
 
-        {/* Lado Direito: Formulário */}
+        {/* Lado Direito: Formulário Dinâmico */}
         <Grid item xs={12} md={6} sx={{ 
           bgcolor: 'white', 
           display: 'flex', 
@@ -78,12 +88,12 @@ export const LoginPage = () => {
           alignItems: 'center',
           p: { xs: 3, md: 6 } 
         }}>
-          <Box component="form" onSubmit={handleLogin} sx={{ maxWidth: '400px', width: '100%' }}>
+          <Box component="form" onSubmit={handleSubmit} sx={{ maxWidth: '400px', width: '100%' }}>
             <Typography variant="h4" component="h1" fontWeight="bold" color="#546e7a" gutterBottom>
-              Bem-vindo de volta!
+              {isRegistering ? 'Criar Conta' : 'Bem-vindo de volta!'}
             </Typography>
             <Typography variant="body1" color="#78909c" sx={{ mb: 4 }}>
-              Acesse sua conta Flugo.
+              {isRegistering ? 'Preencha os dados abaixo.' : 'Acesse sua conta Flugo.'}
             </Typography>
 
             {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
@@ -103,7 +113,6 @@ export const LoginPage = () => {
                   </InputAdornment>
                 ),
               }}
-              // Mantém o estilo de input do MUI
               sx={{ '& .MuiOutlinedInput-root.Mui-focused fieldset': { borderColor: '#00c853' } }} 
             />
 
@@ -133,10 +142,22 @@ export const LoginPage = () => {
               sx={{ '& .MuiOutlinedInput-root.Mui-focused fieldset': { borderColor: '#00c853' } }}
             />
 
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1, mb: 3 }}>
-              <Link href="#" variant="body2" color="#78909c" underline="hover">
-                Esqueceu a senha?
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1, mb: 3 }}>
+              <Link 
+                component="button" 
+                type="button"
+                variant="body2" 
+                color="#78909c" 
+                onClick={() => setIsRegistering(!isRegistering)}
+                sx={{ textDecoration: 'none', fontWeight: 'bold' }}
+              >
+                {isRegistering ? 'Já tenho uma conta' : 'Criar uma conta'}
               </Link>
+              {!isRegistering && (
+                <Link href="#" variant="body2" color="#78909c" underline="hover">
+                  Esqueceu a senha?
+                </Link>
+              )}
             </Box>
 
             <Button
@@ -145,7 +166,6 @@ export const LoginPage = () => {
               fullWidth
               size="large"
               disabled={loading}
-              // Mantém o estilo de botão verde do MUI
               sx={{ 
                 bgcolor: '#00c853', 
                 '&:hover': { bgcolor: '#00a844' }, 
@@ -155,7 +175,7 @@ export const LoginPage = () => {
                 borderRadius: '8px' 
               }}
             >
-              {loading ? 'Entrando...' : 'Entrar'}
+              {loading ? 'Aguarde...' : (isRegistering ? 'Cadastrar' : 'Entrar')}
             </Button>
           </Box>
         </Grid>
