@@ -1,14 +1,12 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from "@mui/material/CssBaseline";
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { LoginPage } from './pages/LoginPage';
-// Importe seus componentes existentes da Parte 1
-// Exemplo:
-// import { DashboardPage } from './pages/DashboardPage';
-// import { RegisterColaboradorPage } from './pages/RegisterColaboradorPage';
-// import { NotFoundPage } from './pages/NotFoundPage'; // Você precisa criar esta página
+import { NotFoundPage } from './pages/NotFoundPage';
+import { Dashboard } from './features/registration/Dashboard';
+import { RegisterColaboradorPage } from './pages/RegisterColaboradorPage';
 
 // Defina um tema básico se necessário
 const theme = createTheme({
@@ -25,21 +23,35 @@ const theme = createTheme({
   },
 });
 
+// Wrapper component to handle navigation and pass the onAddNew prop
+const DashboardWrapper = () => {
+  const navigate = useNavigate();
+
+  const handleAddNew = () => {
+    navigate('/cadastrar');
+  };
+
+  return <Dashboard onAddNew={handleAddNew} />;
+};
+
 function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline /> 
       <BrowserRouter>
         <Routes>
+          {/* Rota Pública */}
           <Route path="/login" element={<LoginPage />} />
 
+          {/* Rotas Protegidas */}
           <Route element={<ProtectedRoute />}>
-            
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            <Route path="/dashboard" element={<div>Dashboard Protegido (Substitua pelo seu componente)</div>} />
+            <Route path="/dashboard" element={<DashboardWrapper />} />
+            <Route path="/cadastrar" element={<RegisterColaboradorPage />} />
           </Route>
 
-          <Route path="*" element={<div>Página 404 Customizada (Crie seu componente e importe aqui)</div>} />
+          {/* Rota 404 para URLs que não existem */}
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </BrowserRouter>
     </ThemeProvider>
