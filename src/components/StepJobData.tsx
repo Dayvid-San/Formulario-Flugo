@@ -30,12 +30,6 @@ export const StepJobData = ({ onNext, onBack, data, departamentos }: any) => {
     }
   };
 
-  const opcoesCargos = [
-    { value: "TI", label: "TI" },
-    { value: "Marketing", label: "Marketing" },
-    { value: "Design", label: "Design" },
-    { value: "Produto", label: "Produto" },
-  ];
 
   return (
     <Box sx={{ width: '100%', bgcolor: '#ffffff' }}>
@@ -67,28 +61,6 @@ export const StepJobData = ({ onNext, onBack, data, departamentos }: any) => {
               >
                 {departamentos.map((dept: any) => (
                   <MenuItem key={dept.id} value={dept.nome}>{dept.nome}</MenuItem>
-                ))}
-              </TextField>
-            </Grid>
-            <Grid item xs={12}>
-              <TextField 
-                select
-                {...register('nivel')} 
-                label="Selecione um cargo" 
-                fullWidth 
-                error={!!errors.nivel} 
-                helperText={errors.nivel?.message}
-                InputLabelProps={{ shrink: true }} 
-                sx={greenInputStyle}
-              >
-                <MenuItem value="" disabled>
-                  <em>Selecione...</em>
-                </MenuItem>
-                
-                {opcoesCargos.map((opcao) => (
-                  <MenuItem key={opcao.value} value={opcao.value}>
-                    {opcao.label}
-                  </MenuItem>
                 ))}
               </TextField>
             </Grid>

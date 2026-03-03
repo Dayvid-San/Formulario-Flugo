@@ -13,6 +13,7 @@ import { auth } from '../../services/firebase'; // Seu objeto auth
 import LogoutIcon from '@mui/icons-material/Logout'; // Ícone de saída
 import { useNavigate } from 'react-router-dom';
 import { NavbarsLayout } from '../../components/NavbarsLayout';
+import { Sidebar } from '../../components/Sidebar';
 
 
 interface EditableAvatarProps {
@@ -189,8 +190,10 @@ export const Dashboard = ({ onAddNew }: DashboardProps) => {
   };
 
   return (
+    <NavbarsLayout>
+    
     <Box sx={{ display: 'flex', height: '100vh', bgcolor: '#f5f5f5' }}>
-      <NavbarsLayout children={undefined} />
+
       <Box sx={{ flexGrow: 1, p: 4 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 4 }}>
           <Typography variant="h5" fontWeight="bold">Colaboradores</Typography>
@@ -269,5 +272,6 @@ export const Dashboard = ({ onAddNew }: DashboardProps) => {
         </TableContainer>
       </Box>
     </Box>
+    </NavbarsLayout>
   );
 };

@@ -7,6 +7,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import { db } from '../services/firebase';
 import { collection, onSnapshot, addDoc, deleteDoc, doc } from 'firebase/firestore';
+import { NavbarsLayout } from '../components/NavbarsLayout';
 
 
 export const DepartmentsPage = () => {
@@ -14,7 +15,6 @@ export const DepartmentsPage = () => {
   const [departments, setDepartments] = useState<{id: string, nome: string}[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // Busca departamentos em tempo real
   useEffect(() => {
     const unsub = onSnapshot(collection(db, "departamentos"), (snapshot) => {
       const data = snapshot.docs.map(d => ({ id: d.id, nome: d.data().nome }));
@@ -45,53 +45,55 @@ export const DepartmentsPage = () => {
   };
 
   return (
-    <Box sx={{ p: 4, maxWidth: '600px', margin: '0 auto' }}>
-      <Typography variant="h4" fontWeight="bold" color="#546e7a" gutterBottom>
-        Departamentos
-      </Typography>
+    <NavbarsLayout>
+      <Box sx={{ p: 4, maxWidth: '600px', margin: '0 auto' }}>
+        <Typography variant="h4" fontWeight="bold" color="#546e7a" gutterBottom>
+          Departamentos
+        </Typography>
 
-      <Paper component="form" onSubmit={handleAdd} sx={{ p: 2, mb: 4, display: 'flex', gap: 2 }}>
-        <TextField 
-          fullWidth 
-          label="Nome do Departamento" 
-          value={deptName}
-          onChange={(e) => setDeptName(e.target.value)}
-          disabled={loading}
-        />
-        <Button 
-          type="submit" 
-          variant="contained" 
-          color="success" 
-          startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <AddIcon />}
-          disabled={loading}
-        >
-          Adicionar
-        </Button>
-      </Paper>
+        <Paper component="form" onSubmit={handleAdd} sx={{ p: 2, mb: 4, display: 'flex', gap: 2 }}>
+          <TextField 
+            fullWidth 
+            label="Nome do Departamento" 
+            value={deptName}
+            onChange={(e) => setDeptName(e.target.value)}
+            disabled={loading}
+          />
+          <Button 
+            type="submit" 
+            variant="contained" 
+            sx={{ bgcolor: '#00c853', color: '#ffffff', px: { xs: 2, md: 4 }, fontSize: { xs: '0.8rem', md: '0.9rem' }, '&:hover': { bgcolor: '#00a844' }, textTransform: 'none', fontWeight: 'bold' }}
+            startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <AddIcon />}
+            disabled={loading}
+          >
+            Adicionar
+          </Button>
+        </Paper>
 
-      <Paper>
-        <List>
-          {departments.map((dept, index) => (
-            <React.Fragment key={dept.id}>
-              <ListItem
-                secondaryAction={
-                  <IconButton edge="end" color="error" onClick={() => handleDelete(dept.id)}>
-                    <DeleteIcon />
-                  </IconButton>
-                }
-              >
-                <ListItemText primary={dept.nome} />
-              </ListItem>
-              {index < departments.length - 1 && <Divider />}
-            </React.Fragment>
-          ))}
-          {departments.length === 0 && (
-            <Typography sx={{ p: 3, textAlign: 'center', color: '#999' }}>
-              Nenhum departamento cadastrado.
-            </Typography>
-          )}
-        </List>
-      </Paper>
-    </Box>
+        <Paper>
+          <List>
+            {departments.map((dept, index) => (
+              <React.Fragment key={dept.id}>
+                <ListItem
+                  secondaryAction={
+                    <IconButton edge="end" color="error" onClick={() => handleDelete(dept.id)}>
+                      <DeleteIcon />
+                    </IconButton>
+                  }
+                >
+                  <ListItemText primary={dept.nome} />
+                </ListItem>
+                {index < departments.length - 1 && <Divider />}
+              </React.Fragment>
+            ))}
+            {departments.length === 0 && (
+              <Typography sx={{ p: 3, textAlign: 'center', color: '#999' }}>
+                Nenhum departamento cadastrado.
+              </Typography>
+            )}
+          </List>
+        </Paper>
+      </Box>
+    </NavbarsLayout>
   );
 };
