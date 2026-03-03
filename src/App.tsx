@@ -6,32 +6,26 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { LoginPage } from './pages/LoginPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { Dashboard } from './features/registration/Dashboard';
-import { RegisterColaboradorPage } from './pages/RegisterCollaboratorPage';
 import { DepartmentsPage } from './pages/DepartamentsPage';
+import { MultiStepForm } from './features/registration/MultiStepForm'; 
 
 
 const theme = createTheme({
   palette: {
-    primary: {
-      main: '#00c853', // Verde Flugo
-    },
-    background: {
-      default: '#f5f5f5',
-    },
+    primary: { main: '#00c853' },
+    background: { default: '#f5f5f5' },
   },
-  typography: {
-    fontFamily: 'Roboto, Arial, sans-serif',
-  },
+  typography: { fontFamily: 'Roboto, Arial, sans-serif' },
 });
 
 const DashboardWrapper = () => {
   const navigate = useNavigate();
+  return <Dashboard onAddNew={() => navigate('/cadastrar')} />;
+};
 
-  const handleAddNew = () => {
-    navigate('/cadastrar');
-  };
-
-  return <Dashboard onAddNew={handleAddNew} />;
+const RegisterWrapper = () => {
+  const navigate = useNavigate();
+  return <MultiStepForm onCancel={() => navigate('/dashboard')} />;
 };
 
 function App() {
@@ -40,18 +34,15 @@ function App() {
       <CssBaseline /> 
       <BrowserRouter>
         <Routes>
-          {/* Rota Pública */}
           <Route path="/login" element={<LoginPage />} />
 
-          {/* Rotas Protegidas */}
           <Route element={<ProtectedRoute />}>
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="/dashboard" element={<DashboardWrapper />} />
-            <Route path="/cadastrar" element={<RegisterColaboradorPage />} />
             <Route path="/departamentos" element={<DepartmentsPage />} />
+            <Route path="/cadastrar" element={<RegisterWrapper />} />
           </Route>
 
-          {/* Rota 404 para URLs que não existem */}
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </BrowserRouter>

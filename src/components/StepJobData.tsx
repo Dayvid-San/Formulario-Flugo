@@ -2,20 +2,24 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { TextField, Button, Box, Grid, Typography, MenuItem } from '@mui/material';
-import { NavbarsLayout } from './NavbarsLayout';
-
 
 const jobSchema = z.object({
-  cargo: z.string().min(1, "O cargo é obrigatório"),
+  departamento: z.string().min(1, "O departamento é obrigatório"),
+  nivel: z.enum(["Júnior", "Pleno", "Sênior", "Gestor"]),
+  salario: z.number().min(1, "Informe o salário"),
+  dataAdmissao: z.string().min(1, "Informe a data"),
 });
 
 type JobFormData = z.infer<typeof jobSchema>;
 
-export const StepJobData = ({ onNext, onBack, data }: any) => {
+export const StepJobData = ({ onNext, onBack, data, departamentos }: any) => {
   const { register, handleSubmit, formState: { errors } } = useForm<JobFormData>({
     resolver: zodResolver(jobSchema),
     defaultValues: {
-      cargo: data?.cargo || "",
+      departamento: data?.departamento || "",
+      nivel: data?.nivel || "Júnior",
+      salario: data?.salario || 0,
+      dataAdmissao: data?.dataAdmissao || "",
     }
   });
 
@@ -35,7 +39,6 @@ export const StepJobData = ({ onNext, onBack, data }: any) => {
 
   return (
     <Box sx={{ width: '100%', bgcolor: '#ffffff' }}>
-      <NavbarsLayout children={undefined} />
       <Box 
         component="form" 
         onSubmit={handleSubmit(onNext)} 
@@ -55,11 +58,26 @@ export const StepJobData = ({ onNext, onBack, data }: any) => {
             <Grid item xs={12}>
               <TextField 
                 select
-                {...register('cargo')} 
-                label="Selecione um departamento/cargo" 
                 fullWidth 
-                error={!!errors.cargo} 
-                helperText={errors.cargo?.message} 
+                label="Departamento" 
+                {...register('departamento')}
+                error={!!errors.departamento}
+                helperText={errors.departamento?.message}
+                sx={greenInputStyle}
+              >
+                {departamentos.map((dept: any) => (
+                  <MenuItem key={dept.id} value={dept.nome}>{dept.nome}</MenuItem>
+                ))}
+              </TextField>
+            </Grid>
+            <Grid item xs={12}>
+              <TextField 
+                select
+                {...register('nivel')} 
+                label="Selecione um cargo" 
+                fullWidth 
+                error={!!errors.nivel} 
+                helperText={errors.nivel?.message}
                 InputLabelProps={{ shrink: true }} 
                 sx={greenInputStyle}
               >

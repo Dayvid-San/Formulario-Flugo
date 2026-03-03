@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Box, Stepper, Step, StepLabel, Button, Paper, Typography, LinearProgress, Breadcrumbs, Link, Dialog, DialogContent, Grid } from '@mui/material';
-import { collection, addDoc } from "firebase/firestore";
+import { addDoc, collection, onSnapshot } from "firebase/firestore";
 import { db } from "../../services/firebase"; 
 import { StepPersonalData } from '../../components/StepPersonalData';
 import { StepJobData } from '../../components/StepJobData';
@@ -13,6 +13,14 @@ export const MultiStepForm = ({ onCancel }: { onCancel: () => void }) => {
   const [activeStep, setActiveStep] = useState(0);
   const [formData, setFormData] = useState({});
   const [openSuccess, setOpenSuccess] = useState(false);
+  const [listaDepartamentos, setListaDepartamentos] = useState<any[]>([]);
+
+  useEffect(() => {
+    const unsub = onSnapshot(collection(db, "departamentos"), (snapshot) => {
+      setListaDepartamentos(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
+    });
+    return () => unsub();
+  }, []);
 
   const handleNextStep = (stepData: any) => {
     const updatedData = { ...formData, ...stepData };
@@ -61,7 +69,7 @@ export const MultiStepForm = ({ onCancel }: { onCancel: () => void }) => {
             sx={{ 
               flexGrow: 1, 
               height: 4, 
-              bgcolor: '#e0f2f1', 
+              bgcolor: '#e0f2f1',
               borderRadius: 2,
               '& .MuiLinearProgress-bar': { bgcolor: '#00c853' } 
             }} 
@@ -113,7 +121,7 @@ export const MultiStepForm = ({ onCancel }: { onCancel: () => void }) => {
               <StepPersonalData onNext={handleNextStep} onCancel={onCancel} data={formData} />
             )}
             {activeStep === 1 && (
-              <StepJobData onNext={handleNextStep} onBack={handleBack} data={formData} />
+              <StepJobData onNext={handleNextStep} onBack={handleBack} data={formData} departamentos={listaDepartamentos} />
             )}
           </Box>
         </Grid>
