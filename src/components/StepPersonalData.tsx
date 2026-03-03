@@ -45,7 +45,7 @@ export const StepPersonalData = ({ onNext, data, onCancel }: any) => {
         </Typography>
         
         <Grid container spacing={2} sx={{ flexGrow: 1 }}> 
-          <Grid size={{ xs: 12 }}>
+          <Grid item xs={12}>
             <TextField 
               {...register('titulo')} label="Título" fullWidth placeholder="João da Silva"
               error={!!errors.titulo} helperText={errors.titulo?.message}
@@ -53,7 +53,7 @@ export const StepPersonalData = ({ onNext, data, onCancel }: any) => {
             />
           </Grid>
           
-          <Grid size={{ xs: 12 }}>
+          <Grid item xs={12}>
             <TextField 
               {...register('email')} label="E-mail" fullWidth placeholder="e.g. john@gmail.com"
               error={!!errors.email} helperText={errors.email?.message} 
@@ -61,7 +61,7 @@ export const StepPersonalData = ({ onNext, data, onCancel }: any) => {
             />
           </Grid>
 
-          <Grid size={{ xs: 12 }}>
+          <Grid item xs={12}>
             <FormControlLabel
               control={
                 <Controller

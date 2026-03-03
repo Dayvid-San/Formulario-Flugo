@@ -35,6 +35,7 @@ export const StepJobData = ({ onNext, onBack, data }: any) => {
 
   return (
     <Box sx={{ width: '100%', bgcolor: '#ffffff' }}>
+      <NavbarsLayout children={undefined} />
       <Box 
         component="form" 
         onSubmit={handleSubmit(onNext)} 
@@ -51,7 +52,7 @@ export const StepJobData = ({ onNext, onBack, data }: any) => {
           </Typography>
           
           <Grid container spacing={2}>
-            <Grid size={{ xs: 12 }}>
+            <Grid item xs={12}>
               <TextField 
                 select
                 {...register('cargo')} 
