@@ -8,21 +8,16 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import React, { useState, useEffect, useRef } from 'react';
 import { collection, onSnapshot, doc, updateDoc, deleteDoc } from "firebase/firestore";
 import { db } from "../../services/firebase";
-import { signOut } from 'firebase/auth'; // Função de logout do Firebase
-import { auth } from '../../services/firebase'; // Seu objeto auth
-import LogoutIcon from '@mui/icons-material/Logout'; // Ícone de saída
-import { useNavigate } from 'react-router-dom';
 import { NavbarsLayout } from '../../components/NavbarsLayout';
-import { Sidebar } from '../../components/Sidebar';
 
 
 interface EditableAvatarProps {
-  nome: string;
-  imagemUrl?: string;
+  name: string;
+  imageUrl?: string;
   onSave: (base64Image: string) => void;
 }
 
-const EditableAvatar = ({ nome, imagemUrl, onSave }: EditableAvatarProps) => {
+const EditableAvatar = ({ name, imageUrl, onSave }: EditableAvatarProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -46,7 +41,7 @@ const EditableAvatar = ({ nome, imagemUrl, onSave }: EditableAvatarProps) => {
         onChange={handleFileChange} 
       />
       <Avatar 
-        {...(imagemUrl ? { src: imagemUrl } : {})} 
+        {...(imageUrl ? { src: imageUrl } : {})} 
         onClick={(e) => {
           e.stopPropagation(); 
           fileInputRef.current?.click();
@@ -60,7 +55,7 @@ const EditableAvatar = ({ nome, imagemUrl, onSave }: EditableAvatarProps) => {
           '&:hover': { opacity: 0.7 } 
         }}
       >
-        {!imagemUrl && nome ? nome.charAt(0).toUpperCase() : 'C'}
+        {!imageUrl && name ? name.charAt(0).toUpperCase() : 'C'}
       </Avatar>
     </>
   );
@@ -119,9 +114,9 @@ const EditableTableCell = ({ initialValue, onSave, avatar, options }: EditableTa
             fullWidth
             sx={{ input: { color: '#00c853', fontWeight: 'bold' } }}
           >
-            {options?.map((opcao) => (
-              <MenuItem key={opcao.value} value={opcao.value}>
-                {opcao.label}
+            {options?.map((option) => (
+              <MenuItem key={option.value} value={option.value}>
+                {option.label}
               </MenuItem>
             ))}
           </TextField>
@@ -138,51 +133,45 @@ interface DashboardProps {
 }
 
 export const Dashboard = ({ onAddNew }: DashboardProps) => {
-  const [colaboradores, setColaboradores] = useState<any[]>([]);
-  const navigate = useNavigate();
-
-
-  const handleLogout = async () => {
-    try {
-      await signOut(auth); 
-      navigate('/login'); 
-    } catch (error) {
-      console.error("Erro ao sair:", error);
-    }
-  };
-
-  const opcoesCargos = [
-    { value: "TI", label: "TI" },
-    { value: "Marketing", label: "Marketing" },
-    { value: "Design", label: "Design" },
-    { value: "Produto", label: "Produto" },
-  ];
+  const [collaborators, setCollaborators] = useState<any[]>([]);
+  const [dbDepartments, setDbDepartments] = useState<{ value: string, label: string }[]>([]);
 
   useEffect(() => {
-    const colaboradoresRef = collection(db, "colaboradores");
-    
-    const unsubscribe = onSnapshot(colaboradoresRef, (snapshot) => {
-      const lista = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      setColaboradores(lista);
+    const collaboratorsRef = collection(db, "colaboradores");
+    const unsubscribe = onSnapshot(collaboratorsRef, (snapshot) => {
+        const list = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
+        setCollaborators(list);
     });
-
     return () => unsubscribe();
   }, []);
 
-  const deletarColaborador = async (id: string) => {
+  useEffect(() => {
+      const deptsRef = collection(db, "departamentos");
+      const unsubscribe = onSnapshot(deptsRef, (snapshot) => {
+        const list = snapshot.docs.map(doc => ({
+          value: doc.data().nome, 
+          label: doc.data().nome
+        }));
+        setDbDepartments(list);
+      });
+    
+      return () => unsubscribe();
+  }, []);
+
+  const deleteCollaborator = async (id: string) => {
     if (window.confirm("Deseja realmente excluir este colaborador?")) {
       await deleteDoc(doc(db, "colaboradores", id));
     }
   };
 
-  const atualizarCampo = async (id: string, campo: string, novoValor: string) => {
+  const updateField = async (id: string, field: string, newValue: string) => {
     try {
       const docRef = doc(db, "colaboradores", id);
       await updateDoc(docRef, {
-        [campo]: novoValor
+        [field]: newValue
       });
     } catch (error) {
       console.error("Erro ao atualizar o Firebase:", error);
@@ -218,49 +207,49 @@ export const Dashboard = ({ onAddNew }: DashboardProps) => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {colaboradores.map((colab) => (
-                <TableRow key={colab.id} hover>
+              {collaborators.map((collaborator) => (
+                <TableRow key={collaborator.id} hover>
                   <EditableTableCell 
-                    initialValue={colab.titulo || ''} 
-                    onSave={(novoValor) => atualizarCampo(colab.id, 'titulo', novoValor)}
+                    initialValue={collaborator.titulo || ''} 
+                    onSave={(newValue) => updateField(collaborator.id, 'titulo', newValue)}
                     avatar={
                       <EditableAvatar 
-                        nome={colab.titulo || ''} 
-                        imagemUrl={colab.avatarUrl}
-                        onSave={(base64) => atualizarCampo(colab.id, 'avatarUrl', base64)} 
+                        name={collaborator.titulo || ''} 
+                        imageUrl={collaborator.avatarUrl}
+                        onSave={(base64) => updateField(collaborator.id, 'avatarUrl', base64)} 
                       />
                     }
                   />
 
                   <EditableTableCell 
-                    initialValue={colab.email || ''} 
-                    onSave={(novoValor) => atualizarCampo(colab.id, 'email', novoValor)}
+                    initialValue={collaborator.email || ''} 
+                    onSave={(newValue) => updateField(collaborator.id, 'email', newValue)}
                   />
 
                   <EditableTableCell 
-                    initialValue={colab.cargo || ''} 
-                    options={opcoesCargos}
-                    onSave={(novoValor) => atualizarCampo(colab.id, 'cargo', novoValor)}
+                    initialValue={collaborator.cargo || ''} 
+                    options={dbDepartments}
+                    onSave={(newValue) => updateField(collaborator.id, 'cargo', newValue)}
                   />
                   
                   <TableCell>
                     <Chip 
-                      label={colab.status === 'Ativo' ? 'Ativo' : 'Inativo'} 
-                      color={colab.status === 'Ativo' ? 'success' : 'default'} 
-                      variant={colab.status === 'Ativo' ? "filled" : "outlined"}
+                      label={collaborator.status === 'Ativo' ? 'Ativo' : 'Inativo'} 
+                      color={collaborator.status === 'Ativo' ? 'success' : 'default'} 
+                      variant={collaborator.status === 'Ativo' ? "filled" : "outlined"}
                       size="small"
                       sx={{ fontWeight: 'bold' }}
                     />
                   </TableCell>
                   <TableCell>
-                    <IconButton onClick={() => deletarColaborador(colab.id)} color="error">
+                    <IconButton onClick={() => deleteCollaborator(collaborator.id)} color="error">
                       <DeleteIcon />
                     </IconButton>
                   </TableCell>
                 </TableRow>
               ))}
               
-              {colaboradores.length === 0 && (
+              {collaborators.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={4} align="center" sx={{ py: 6, color: '#999' }}>
                     Nenhum colaborador cadastrado ainda.

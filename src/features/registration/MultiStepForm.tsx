@@ -14,11 +14,21 @@ export const MultiStepForm = ({ onCancel }: { onCancel: () => void }) => {
   const [activeStep, setActiveStep] = useState(0);
   const [formData, setFormData] = useState({});
   const [openSuccess, setOpenSuccess] = useState(false);
-  const [listaDepartamentos, setListaDepartamentos] = useState<any[]>([]);
+  const [departmentList, setDepartmentList] = useState<any[]>([]);
+
+  const departmentOptions = [
+    { value: "TI", label: "TI" },
+    { value: "Marketing", label: "Marketing" },
+    { value: "Design", label: "Design" },
+    { value: "Produto", label: "Produto" },
+    { value: "Vendas", label: "Vendas" },
+    { value: "Financeiro", label: "Financeiro" },
+    { value: "Recursos Humanos", label: "Recursos Humanos" },
+  ];
 
   useEffect(() => {
     const unsub = onSnapshot(collection(db, "departamentos"), (snapshot) => {
-      setListaDepartamentos(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
+      setDepartmentList(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
     });
     return () => unsub();
   }, []);
@@ -38,15 +48,15 @@ export const MultiStepForm = ({ onCancel }: { onCancel: () => void }) => {
 
   const handleFinalSubmit = async (allData: any) => {
     try {
-      const colaboradoresRef = collection(db, "colaboradores");
-      await addDoc(colaboradoresRef, {
-        nome: allData.nome,
+      const collaboratorsRef = collection(db, "colaboradores");
+      await addDoc(collaboratorsRef, {
+        name: allData.name,
         email: allData.email,
-        ativo: allData.ativo,
-        departamento: allData.departamento, // Relacionamento aqui
-        nivel: allData.nivel,
-        salario: Number(allData.salario),
-        dataAdmissao: allData.dataAdmissao,
+        active: allData.active,
+        department: allData.department, 
+        level: allData.level,
+        salary: Number(allData.salary),
+        admissionDate: allData.admissionDate,
         createdAt: new Date().toISOString()
       });
       setOpenSuccess(true); 
@@ -127,7 +137,7 @@ export const MultiStepForm = ({ onCancel }: { onCancel: () => void }) => {
                 <StepPersonalData onNext={handleNextStep} onCancel={onCancel} data={formData} />
               )}
               {activeStep === 1 && (
-                <StepJobData onNext={handleNextStep} onBack={handleBack} data={formData} departamentos={listaDepartamentos} />
+                <StepJobData onNext={handleNextStep} onBack={handleBack} data={formData} departments={departmentOptions} />
               )}
             </Box>
           </Grid>
