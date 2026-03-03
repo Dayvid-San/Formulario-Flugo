@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm, Controller, SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { 
   Box, Stepper, Step, StepLabel, Button, Typography, 
@@ -8,8 +8,8 @@ import {
 } from '@mui/material';
 import Grid from '@mui/material/Grid';
 import { db } from '../services/firebase';
-import { collection, addDoc } from 'firebase/firestore';
-import { colaboradorSchema, ColaboradorFormData } from '../schemas/colaboradorSchema';
+import { collection, addDoc, onSnapshot } from 'firebase/firestore';
+import { collaboratorSchema, CollaboratorFormData } from '../schemas/collaboratorSchema';
 
 const steps = ['Informações Básicas', 'Informações Profissionais'];
 
@@ -17,9 +17,10 @@ export const RegisterColaboradorPage = () => {
   const [activeStep, setActiveStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const [listaDepartamentos, setListaDepartamentos] = useState<{id: string, nome: string}[]>([]);
 
-  const { control, handleSubmit, trigger, formState: { errors } } = useForm<ColaboradorFormData>({
-    resolver: zodResolver(colaboradorSchema),
+  const { control, handleSubmit, trigger, formState: { errors } } = useForm<CollaboratorFormData>({
+    resolver: zodResolver(collaboratorSchema),
     defaultValues: {
       nome: '',
       email: '',
@@ -31,6 +32,15 @@ export const RegisterColaboradorPage = () => {
       gestor: ''
     }
   });
+
+
+  useEffect(() => {
+    const unsub = onSnapshot(collection(db, "departamentos"), (snapshot) => {
+      const data = snapshot.docs.map(d => ({ id: d.id, nome: d.data().nome }));
+      setListaDepartamentos(data);
+    });
+    return () => unsub();
+  }, []);
 
   // Função para avançar etapas validando apenas os campos da etapa atual
   const handleNext = async () => {
@@ -44,7 +54,7 @@ export const RegisterColaboradorPage = () => {
 
   const handleBack = () => setActiveStep((prev) => prev - 1);
 
-  const onSubmit = async (data: ColaboradorFormData) => {
+  const onSubmit: SubmitHandler<CollaboratorFormData> = async (data) => {
     setLoading(true);
     try {
       await addDoc(collection(db, "colaboradores"), {
@@ -98,7 +108,7 @@ export const RegisterColaboradorPage = () => {
             <Grid container spacing={3}>
               <Grid item xs={12} md={6}>
                 <Controller name="dataAdmissao" control={control} render={({ field }) => (
-                  <TextField {...field} type="date" label="Data de Admissão" fullWidth slotProps={{ inputLabel: { shrink: true } }} error={!!errors.dataAdmissao} helperText={errors.dataAdmissao?.message} />
+                  <TextField {...field} type="date" label="Data de Admissão" fullWidth InputLabelProps={{ shrink: true }} error={!!errors.dataAdmissao} helperText={errors.dataAdmissao?.message} />
                 )} />
               </Grid>
               <Grid item xs={12} md={6}>

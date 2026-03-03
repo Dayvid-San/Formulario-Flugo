@@ -10,6 +10,7 @@ import {
   FormControlLabel, 
   Switch 
 } from '@mui/material';
+import { NavbarsLayout } from './NavbarsLayout';
 
 
 const personalSchema = z.object({
@@ -39,6 +40,7 @@ export const StepPersonalData = ({ onNext, data, onCancel }: any) => {
 
   return (
     <Box sx={{ display: 'flex', height: '75vh', bgcolor: '#ffffff' }}>
+      <NavbarsLayout children={undefined} />
       <Box component="form" onSubmit={handleSubmit(onNext)} sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
         <Typography variant="h5" sx={{ mb: 4, fontWeight: 'bold', color: '#546e7a' }}>
           Informações Básicas

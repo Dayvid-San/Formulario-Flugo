@@ -6,9 +6,10 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { LoginPage } from './pages/LoginPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { Dashboard } from './features/registration/Dashboard';
-import { RegisterColaboradorPage } from './pages/RegisterColaboradorPage';
+import { RegisterColaboradorPage } from './pages/RegisterCollaboratorPage';
+import { DepartmentsPage } from './pages/DepartamentsPage';
 
-// Defina um tema básico se necessário
+
 const theme = createTheme({
   palette: {
     primary: {
@@ -23,7 +24,6 @@ const theme = createTheme({
   },
 });
 
-// Wrapper component to handle navigation and pass the onAddNew prop
 const DashboardWrapper = () => {
   const navigate = useNavigate();
 
@@ -48,6 +48,7 @@ function App() {
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="/dashboard" element={<DashboardWrapper />} />
             <Route path="/cadastrar" element={<RegisterColaboradorPage />} />
+            <Route path="/departamentos" element={<DepartmentsPage />} />
           </Route>
 
           {/* Rota 404 para URLs que não existem */}

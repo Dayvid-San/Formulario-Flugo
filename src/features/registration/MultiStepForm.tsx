@@ -6,6 +6,7 @@ import { StepPersonalData } from '../../components/StepPersonalData';
 import { StepJobData } from '../../components/StepJobData';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 
+
 const stepsLabels = ['Infos Básicas', 'Infos Profissionais'];
 
 export const MultiStepForm = ({ onCancel }: { onCancel: () => void }) => {
@@ -45,7 +46,6 @@ export const MultiStepForm = ({ onCancel }: { onCancel: () => void }) => {
 
   return (
     <Box sx={{ width: '100%', minHeight: '100vh', bgcolor: '#ffffff', p: 4 }}>
-      
       <Box sx={{ mb: 4, maxWidth: 1000 }}>
         <Breadcrumbs separator="•" sx={{ mb: 2, color: '#757575', fontSize: '0.9rem' }}>
           <Link underline="hover" color="inherit" sx={{ cursor: 'pointer' }} onClick={() => onCancel()}>
@@ -74,7 +74,7 @@ export const MultiStepForm = ({ onCancel }: { onCancel: () => void }) => {
 
       <Grid container spacing={4} sx={{ maxWidth: 1000 }}>
         
-        <Grid size={{ xs: 12, md: 3 }}>
+        <Grid item xs={12} md={3}>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, pt: 1 }}>
             {stepsLabels.map((label, index) => {
               const isPast = index < activeStep;
@@ -107,7 +107,7 @@ export const MultiStepForm = ({ onCancel }: { onCancel: () => void }) => {
           </Box>
         </Grid>
 
-        <Grid size={{ xs: 12, md: 9 }}>
+        <Grid item xs={12} md={9}>
           <Box sx={{ minHeight: 400 }}>
             {activeStep === 0 && (
               <StepPersonalData onNext={handleNextStep} onCancel={onCancel} data={formData} />

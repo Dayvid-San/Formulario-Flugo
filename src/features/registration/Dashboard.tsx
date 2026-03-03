@@ -8,6 +8,12 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import React, { useState, useEffect, useRef } from 'react';
 import { collection, onSnapshot, doc, updateDoc, deleteDoc } from "firebase/firestore";
 import { db } from "../../services/firebase";
+import { signOut } from 'firebase/auth'; // Função de logout do Firebase
+import { auth } from '../../services/firebase'; // Seu objeto auth
+import LogoutIcon from '@mui/icons-material/Logout'; // Ícone de saída
+import { useNavigate } from 'react-router-dom';
+import { NavbarsLayout } from '../../components/NavbarsLayout';
+
 
 interface EditableAvatarProps {
   nome: string;
@@ -132,6 +138,17 @@ interface DashboardProps {
 
 export const Dashboard = ({ onAddNew }: DashboardProps) => {
   const [colaboradores, setColaboradores] = useState<any[]>([]);
+  const navigate = useNavigate();
+
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth); 
+      navigate('/login'); 
+    } catch (error) {
+      console.error("Erro ao sair:", error);
+    }
+  };
 
   const opcoesCargos = [
     { value: "TI", label: "TI" },
@@ -173,6 +190,7 @@ export const Dashboard = ({ onAddNew }: DashboardProps) => {
 
   return (
     <Box sx={{ display: 'flex', height: '100vh', bgcolor: '#f5f5f5' }}>
+      <NavbarsLayout children={undefined} />
       <Box sx={{ flexGrow: 1, p: 4 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 4 }}>
           <Typography variant="h5" fontWeight="bold">Colaboradores</Typography>
