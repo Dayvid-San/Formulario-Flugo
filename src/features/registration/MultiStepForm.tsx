@@ -40,18 +40,20 @@ export const MultiStepForm = ({ onCancel }: { onCancel: () => void }) => {
     try {
       const collaboratorsRef = collection(db, "colaboradores");
       await addDoc(collaboratorsRef, {
-        name: allData.name,
+        titulo: allData.name, 
         email: allData.email,
-        active: allData.active,
-        department: allData.department, 
-        level: allData.level,
-        salary: Number(allData.salary),
+        status: allData.active ? 'Ativo' : 'Inativo', 
+        cargo: allData.department, 
+        nivel: allData.level,
+        salario: Number(allData.salary),
         admissionDate: allData.admissionDate,
+        responsibleManager: allData.responsibleManager,
         createdAt: new Date().toISOString()
       });
+      
       setOpenSuccess(true); 
     } catch (error) {
-      console.error("Erro ao salvar:", error);
+      console.error("Error saving to database:", error);
     }
   };
 

@@ -2,26 +2,53 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { TextField, Button, Box, Grid, Typography, MenuItem } from '@mui/material';
+import { useEffect, useState } from 'react';
+import { collection, query, where, onSnapshot } from "firebase/firestore";
+import { db } from "../services/firebase";
 
 const jobSchema = z.object({
   department: z.string().min(1, "O departamento é obrigatório"),
   level: z.enum(["Júnior", "Pleno", "Sênior", "Gestor"]),
-  salary: z.number().min(1, "Informe o salário"),
-  admissionDate: z.string().min(1, "Informe a data"),
+  salary: z.number().min(1, "O salário é obrigatório"),
+  admissionDate: z.string().min(1, "A data de admissão é obrigatória"),
+  responsibleManager: z.string().min(1, "O gestor responsável é obrigatório"),
 });
 
 type JobFormData = z.infer<typeof jobSchema>;
 
 export const StepJobData = ({ onNext, onBack, data, departments }: any) => {
-  const { register, handleSubmit, formState: { errors } } = useForm<JobFormData>({
+  const [managers, setManagers] = useState<{ id: string, name: string }[]>([]);
+
+  const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm<JobFormData>({
     resolver: zodResolver(jobSchema),
     defaultValues: {
       department: data?.department || "",
       level: data?.level || "Júnior",
-      salary: data?.salary || 0,
+      salary: data?.salary || undefined,
       admissionDate: data?.admissionDate || "",
+      responsibleManager: data?.responsibleManager || "",
     }
   });
+
+  const departmentValue = watch('department');
+
+  useEffect(() => {
+    const managersQuery = query(collection(db, "colaboradores"), where("nivel", "==", "Gestor"));
+    const unsubscribe = onSnapshot(managersQuery, (snapshot) => {
+      const list = snapshot.docs.map(doc => ({
+        id: doc.id,
+        name: doc.data().titulo || doc.data().name
+      }));
+      setManagers(list);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    if (data?.department) {
+        setValue('department', data.department);
+    }
+  }, [data, setValue]);
 
   const greenInputStyle = {
     '& label.Mui-focused': { color: '#00c853' },
@@ -29,7 +56,6 @@ export const StepJobData = ({ onNext, onBack, data, departments }: any) => {
       '&.Mui-focused fieldset': { borderColor: '#00c853', borderWidth: '2px' },
     }
   };
-
 
   return (
     <Box sx={{ width: '100%', bgcolor: '#ffffff' }}>
@@ -48,21 +74,78 @@ export const StepJobData = ({ onNext, onBack, data, departments }: any) => {
             Informações Profissionais
           </Typography>
           
-          <Grid container spacing={2}>
-            <Grid item xs={12}>
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={6}>
+                <TextField 
+                    select
+                    fullWidth 
+                    label="Departamento" 
+                    {...register('department')}
+                    error={!!errors.department}
+                    helperText={errors.department?.message}
+                    sx={greenInputStyle}
+                    value={departmentValue} // Control the component
+                >
+                    {departments.map((dept: any) => (
+                    <MenuItem key={dept.id} value={dept.nome}>{dept.nome}</MenuItem>
+                    ))}
+                </TextField>
+            </Grid>
+            <Grid item xs={12} md={6}>
               <TextField 
                 select
                 fullWidth 
-                label="Departamento" 
-                {...register('department')}
-                error={!!errors.department}
-                helperText={errors.department?.message}
+                label="Nível"
+                {...register('level')}
+                defaultValue="Júnior"
                 sx={greenInputStyle}
               >
-                {departments.map((dept: any) => (
-                  <MenuItem key={dept.id} value={dept.nome}>{dept.nome}</MenuItem>
+                {["Júnior", "Pleno", "Sênior", "Gestor"].map(l => (
+                  <MenuItem key={l} value={l}>{l}</MenuItem>
                 ))}
               </TextField>
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <TextField 
+                fullWidth 
+                type="number"
+                label="Salário"
+                {...register('salary', { valueAsNumber: true })}
+                error={!!errors.salary}
+                helperText={errors.salary?.message}
+                sx={greenInputStyle}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField 
+                fullWidth
+                type="date"
+                label="Data de Admissão"
+                {...register('admissionDate')}
+                error={!!errors.admissionDate}
+                helperText={errors.admissionDate?.message}
+                InputLabelProps={{ shrink: true }}
+                sx={greenInputStyle}
+              />
+            </Grid>
+
+            <Grid item xs={12}>
+                <TextField 
+                    select
+                    fullWidth 
+                    label="Gestor Responsável"
+                    {...register('responsibleManager')}
+                    error={!!errors.responsibleManager}
+                    helperText={errors.responsibleManager?.message}
+                    sx={greenInputStyle}
+                    defaultValue=""
+                >
+                    <MenuItem value="" disabled>Selecione um gestor</MenuItem>
+                    {managers.map(m => (
+                      <MenuItem key={m.id} value={m.name}>{m.name}</MenuItem>
+                    ))}
+                </TextField>
             </Grid>
           </Grid>
         </Box>
@@ -80,7 +163,7 @@ export const StepJobData = ({ onNext, onBack, data, departments }: any) => {
           <Button 
             type="submit" 
             variant="contained" 
-            sx={{ bgcolor: '#00c853', color: '#ffffff', px: 4, borderRadius: 2, fontWeight: 'bold' }}
+            sx={{ bgcolor: '#00c853', color: '#ffffff', px: 4, borderRadius: 2, fontWeight: 'bold', textTransform: 'none' }}
           >
             Concluir
           </Button>
