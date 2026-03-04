@@ -13,7 +13,7 @@ interface LayoutProps {
 
 export const NavbarsLayout = ({ children }: LayoutProps) => {
   const navigate = useNavigate();
-  const location = useLocation(); // Para saber qual aba está ativa
+  const location = useLocation();
 
   const menuItems = [
     { text: 'Equipe', icon: <PeopleIcon />, path: '/dashboard' },
@@ -32,7 +32,6 @@ export const NavbarsLayout = ({ children }: LayoutProps) => {
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: '#f5f5f5', flexDirection: { xs: 'column', md: 'row' } }}>
         
-        {/* SIDEBAR DESKTOP */}
         <Box sx={{ 
             display: { xs: 'none', md: 'flex' }, 
             width: 250, 
@@ -44,7 +43,7 @@ export const NavbarsLayout = ({ children }: LayoutProps) => {
             position: 'sticky',
             top: 0,
             height: '100vh',
-            justifyContent: 'space-between' // Garante que o logout fique embaixo
+            justifyContent: 'space-between'
         }}>
             <Box>
                 <img src="/logo-flugo.png" alt="Flugo" style={{ width: 100, marginBottom: 40 }} />
@@ -74,7 +73,6 @@ export const NavbarsLayout = ({ children }: LayoutProps) => {
                 </List>
             </Box>
 
-            {/* BOTÃO DE SAIR NO RODAPÉ DA SIDEBAR */}
             <Box>
                 <Divider sx={{ mb: 2 }} />
                 <ListItemButton onClick={handleLogout} sx={{ borderRadius: 2, color: '#d32f2f' }}>
@@ -84,7 +82,6 @@ export const NavbarsLayout = ({ children }: LayoutProps) => {
             </Box>
         </Box>
 
-        {/* HEADER MOBILE */}
         <Box sx={{ 
             display: { xs: 'flex', md: 'none' }, 
             p: 2, 
@@ -101,7 +98,6 @@ export const NavbarsLayout = ({ children }: LayoutProps) => {
             </Box>
         </Box>
 
-        {/* ÁREA DE CONTEÚDO PRINCIPAL */}
         <Box sx={{ 
             flexGrow: 1, 
             p: { xs: 2, md: 4 },

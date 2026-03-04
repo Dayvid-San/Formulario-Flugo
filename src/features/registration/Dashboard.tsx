@@ -4,9 +4,15 @@ import {
   Paper, Avatar, Chip, TextField, MenuItem, 
   IconButton
 } from '@mui/material';
+import FileDownloadIcon from '@mui/icons-material/FileDownload';
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import TableChartIcon from '@mui/icons-material/TableChart';
 import DeleteIcon from '@mui/icons-material/Delete';
 import React, { useState, useEffect, useRef } from 'react';
 import { collection, onSnapshot, doc, updateDoc, deleteDoc } from "firebase/firestore";
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 import { db } from "../../services/firebase";
 import { NavbarsLayout } from '../../components/NavbarsLayout';
 
@@ -184,6 +190,52 @@ export const Dashboard = ({ onAddNew }: DashboardProps) => {
     return matchesName && matchesDept;
   });
 
+  const exportToPDF = () => {
+    const doc = new jsPDF();
+    const tableColumn = ["Nome", "Email", "Departamento", "Nível", "Salario", "Status"];
+    const tableRows: any[] = [];
+  
+    filteredCollaborators.forEach(employee => {
+      const employeeData = [
+        employee.titulo || '',
+        employee.email || '',
+        employee.cargo || '',
+        employee.nivel || '',
+        `R$ ${Number(employee.salario || 0).toLocaleString('pt-BR')}`,
+        employee.status || 'Active'
+      ];
+      tableRows.push(employeeData);
+    });
+  
+    autoTable(doc, {
+      head: [tableColumn],
+      body: tableRows,
+      startY: 20,
+      theme: 'grid',
+      headStyles: { fillColor: [0, 200, 83] }
+    });
+  
+    doc.text("Colaboradores", 14, 15);
+    doc.save(`colaboradores_flugo_${new Date().getTime()}.pdf`);
+  };
+  
+  const exportToExcel = () => {
+    const worksheetData = filteredCollaborators.map(employee => ({
+      Name: employee.titulo,
+      Email: employee.email,
+      Department: employee.cargo,
+      Level: employee.nivel,
+      Salary: employee.salario,
+      Status: employee.status
+    }));
+  
+    const worksheet = XLSX.utils.json_to_sheet(worksheetData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Colaboradores");
+    
+    XLSX.writeFile(workbook, `colaboradores_flugo_${new Date().getTime()}.xlsx`);
+  };
+
   const updateField = async (id: string, field: string, newValue: any) => {
     try {
       const docRef = doc(db, "colaboradores", id);
@@ -223,8 +275,6 @@ export const Dashboard = ({ onAddNew }: DashboardProps) => {
     </Paper>
   );
 
-
-
   return (
     <NavbarsLayout>
     
@@ -248,16 +298,56 @@ export const Dashboard = ({ onAddNew }: DashboardProps) => {
               color="#ffa000"
             />
         </Box>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 4 }}>
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center', 
+          mb: 4, 
+          flexWrap: 'wrap', 
+          gap: 2 
+        }}>
           <Typography variant="h5" fontWeight="bold">Colaboradores</Typography>
-          <Button 
-            variant="contained" 
-            onClick={onAddNew}
-            sx={{ bgcolor: '#00c853', color: '#ffffff', px: { xs: 2, md: 2 }, fontSize: { xs: '0.8rem', md: '0.9rem' }, '&:hover': { bgcolor: '#00a844' }, textTransform: 'none', fontWeight: 'bold' }}
-          >
-            Novo Colaborador
-          </Button>
+          
+          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+            <Button 
+              variant="outlined" 
+              color="error" 
+              startIcon={<PictureAsPdfIcon />} 
+              onClick={exportToPDF}
+              sx={{ textTransform: 'none', fontWeight: 'bold' }}
+            >
+              Export PDF
+            </Button>
+            
+            <Button 
+              variant="outlined" 
+              color="primary" 
+              startIcon={<TableChartIcon />} 
+              onClick={exportToExcel}
+              sx={{ textTransform: 'none', fontWeight: 'bold' }}
+            >
+              Export Excel
+            </Button>
+
+            <Button 
+              variant="contained" 
+              onClick={onAddNew}
+              sx={{ 
+                bgcolor: '#00c853', 
+                color: '#ffffff', 
+                px: { xs: 2, md: 3 }, 
+                fontSize: { xs: '0.8rem', md: '0.9rem' }, 
+                '&:hover': { bgcolor: '#00a844' }, 
+                textTransform: 'none', 
+                fontWeight: 'bold',
+                boxShadow: 'none'
+              }}
+            >
+              New Collaborator
+            </Button>
+          </Box>
         </Box>
+        
         <Box sx={{ 
           display: 'flex', 
           gap: 2, 
@@ -277,7 +367,6 @@ export const Dashboard = ({ onAddNew }: DashboardProps) => {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
 
-          {/* Filtro por Departamento */}
           <TextField
             select
             label="Filtrar por Departamento"
@@ -295,6 +384,7 @@ export const Dashboard = ({ onAddNew }: DashboardProps) => {
             ))}
           </TextField>
         </Box>
+        
         <TableContainer component={Paper} sx={{ borderRadius: 2, boxShadow: 'none', border: '1px solid #eee', overflowX: 'auto'}}>
           <Table sx={{ minWidth: 650 }}>
             <TableHead sx={{ bgcolor: '#f8f9fa' }}>
