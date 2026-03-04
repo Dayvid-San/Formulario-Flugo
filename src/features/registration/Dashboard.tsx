@@ -1,139 +1,26 @@
 import { 
-  Box, Button, Typography, Table, TableBody, 
-  TableCell, TableContainer, TableHead, TableRow, 
-  Paper, Avatar, Chip, TextField, MenuItem, 
+  Box, Button, Typography, 
+  TextField, MenuItem, 
   IconButton, FormControl, InputLabel, Select,
-  Checkbox
+  Paper
 } from '@mui/material';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import TableChartIcon from '@mui/icons-material/TableChart';
 import DeleteIcon from '@mui/icons-material/Delete';
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { collection, onSnapshot, doc, updateDoc, deleteDoc, writeBatch } from "firebase/firestore";
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
+
+// Serviços e Layout
 import { db } from "../../services/firebase";
 import { NavbarsLayout } from '../../components/NavbarsLayout';
-import SwapVertIcon from '@mui/icons-material/SwapVert'; 
+import SwapVertIcon from '@mui/icons-material/SwapVert';
 
-
-interface EditableAvatarProps {
-  name: string;
-  imageUrl?: string;
-  onSave: (base64Image: string) => void;
-}
-
-const EditableAvatar = ({ name, imageUrl, onSave }: EditableAvatarProps) => {
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        onSave(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  return (
-    <>
-      <input 
-        type="file" 
-        accept="image/*" 
-        hidden 
-        ref={fileInputRef} 
-        onChange={handleFileChange} 
-      />
-      <Avatar 
-        {...(imageUrl ? { src: imageUrl } : {})} 
-        onClick={(e) => {
-          e.stopPropagation(); 
-          fileInputRef.current?.click();
-        }}
-        sx={{ 
-          bgcolor: '#00c853', 
-          width: 32, 
-          height: 32, 
-          cursor: 'pointer', 
-          transition: 'opacity 0.2s',
-          '&:hover': { opacity: 0.7 } 
-        }}
-      >
-        {!imageUrl && name ? name.charAt(0).toUpperCase() : 'C'}
-      </Avatar>
-    </>
-  );
-};
-
-interface EditableTableCellProps {
-  initialValue: string;
-  onSave: (newValue: string) => void;
-  avatar?: React.ReactNode; 
-  options?: { label: string, value: string }[];
-}
-
-const EditableTableCell = ({ initialValue, onSave, avatar, options }: EditableTableCellProps) => {
-  const [isEditing, setIsEditing] = useState(false);
-  const [value, setValue] = useState(initialValue);
-
-  const handleBlur = () => {
-    setIsEditing(false);
-    if (value !== initialValue) {
-      onSave(value);
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleBlur();
-    } else if (e.key === 'Escape') {
-      setIsEditing(false);
-      setValue(initialValue);
-    }
-  };
-
-  return (
-    <TableCell 
-      onClick={() => setIsEditing(true)} 
-      sx={{ cursor: 'pointer', transition: 'background 0.2s', '&:hover': { bgcolor: '#f0fdf4' }, height: '56px' }}
-    >
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-        {avatar}
-        {isEditing ? (
-          <TextField
-            select={!!options} 
-            value={value}
-            onChange={(e) => {
-              setValue(e.target.value);
-              if (options) {
-                onSave(e.target.value);
-                setIsEditing(false);
-              }
-            }}
-            onBlur={handleBlur}
-            onKeyDown={handleKeyDown}
-            autoFocus={!options}
-            variant="standard"
-            size="small"
-            fullWidth
-            sx={{ input: { color: '#00c853', fontWeight: 'bold' } }}
-          >
-            {options?.map((option) => (
-              <MenuItem key={option.value} value={option.value}>
-                {option.label}
-              </MenuItem>
-            ))}
-          </TextField>
-        ) : (
-          <Typography variant="body2">{value}</Typography>
-        )}
-      </Box>
-    </TableCell>
-  );
-};
+// Componentes e Types Refatorados
+import { CollaboratorTable } from '../../components/CollaboratorTable';
+import { Collaborator, SortKey, LEVEL_OPTIONS } from '../../types/collaborator';
 
 interface DashboardProps {
   onAddNew: () => void;
@@ -154,30 +41,23 @@ const StatCard = ({ title, value, color }: { title: string, value: string | numb
 );
 
 export const Dashboard = ({ onAddNew }: DashboardProps) => {
-  type SortKey = 'titulo' | 'email' | 'cargo' | 'nivel' | 'salario';
-
+  // Estados
   const [sortBy, setSortBy] = useState<SortKey>('titulo');
   const [order, setOrder] = useState<'asc' | 'desc'>('asc');
-  const [collaborators, setCollaborators] = useState<any[]>([]);
+  const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
   const [dbDepartments, setDbDepartments] = useState<{ value: string, label: string }[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterDept, setFilterDept] = useState('Todos');
+  const [departmentFilter, setDepartmentFilter] = useState('Todos');
   const [selected, setSelected] = useState<string[]>([]);
 
-  const levelOptions = [
-    { value: 'Júnior', label: 'Júnior' },
-    { value: 'Pleno', label: 'Pleno' },
-    { value: 'Sênior', label: 'Sênior' },
-    { value: 'Gestor', label: 'Gestor' },
-  ];
-
+  // Listeners do Firebase
   useEffect(() => {
     const collaboratorsRef = collection(db, "colaboradores");
     const unsubscribe = onSnapshot(collaboratorsRef, (snapshot) => {
         const list = snapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
-        }));
+        })) as Collaborator[];
         setCollaborators(list);
     });
     return () => unsubscribe();
@@ -196,44 +76,41 @@ export const Dashboard = ({ onAddNew }: DashboardProps) => {
       return () => unsubscribe();
   }, []);
 
+  // Lógica de Filtro e Busca
   const filteredCollaborators = useMemo(() => {
-    return collaborators.filter(colab => {
-      const matchesName = colab.titulo?.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesDept = filterDept === 'Todos' || colab.cargo === filterDept;
+    return collaborators.filter(collaborator => {
+      const matchesName = collaborator.titulo?.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesDept = departmentFilter === 'Todos' || collaborator.cargo === departmentFilter;
       return matchesName && matchesDept;
     });
-  }, [collaborators, searchTerm, filterDept]);
+  }, [collaborators, searchTerm, departmentFilter]);
 
+  // Lógica de Ordenação
   const sortedCollaborators = useMemo(() => {
-    const sortable = [...filteredCollaborators];
-    sortable.sort((a, b) => {
-      const fieldA = a[sortBy];
-      const fieldB = b[sortBy];
-
-      let comparison = 0;
+    return [...filteredCollaborators].sort((a, b) => {
+      const valueA = a[sortBy];
+      const valueB = b[sortBy];
 
       if (sortBy === 'salario') {
-        const numA = Number(fieldA || 0);
-        const numB = Number(fieldB || 0);
-        comparison = numA - numB;
-      } else {
-        const strA = String(fieldA || '');
-        const strB = String(fieldB || '');
-        comparison = strA.localeCompare(strB);
+        return order === 'asc' 
+          ? Number(valueA || 0) - Number(valueB || 0) 
+          : Number(valueB || 0) - Number(valueA || 0);
       }
-      
-      return order === 'asc' ? comparison : -comparison;
+
+      const strA = String(valueA || '').toLowerCase();
+      const strB = String(valueB || '').toLowerCase();
+
+      return order === 'asc' ? strA.localeCompare(strB) : strB.localeCompare(strA);
     });
-    return sortable;
   }, [filteredCollaborators, sortBy, order]);
 
+  // Cálculos de Estatísticas
   const collaboratorTotal = collaborators.length;
-
   const averageSalary = collaboratorTotal > 0 
     ? collaborators.reduce((acc, curr) => acc + (Number(curr.salario) || 0), 0) / collaboratorTotal 
     : 0;
 
-  const deptoMorePeaple = () => {
+  const getLargestDepartment = () => {
     if (collaboratorTotal === 0) return "Nenhum";
     const counts = collaborators.reduce((acc: any, curr) => {
       acc[curr.cargo] = (acc[curr.cargo] || 0) + 1;
@@ -242,6 +119,7 @@ export const Dashboard = ({ onAddNew }: DashboardProps) => {
     return Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b);
   };
 
+  // Handlers de Seleção e Exclusão
   const handleSelectAll = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.checked) {
       const newSelecteds = sortedCollaborators.map((n) => n.id);
@@ -292,24 +170,20 @@ export const Dashboard = ({ onAddNew }: DashboardProps) => {
     }
   };
 
+  // Handlers de Exportação
   const exportToPDF = () => {
-    const doc = new jsPDF();
+    const pdfDoc = new jsPDF();
     const tableColumn = ["Nome", "Email", "Departamento", "Nível", "Salario", "Status"];
-    const tableRows: any[] = [];
+    const tableRows = sortedCollaborators.map(employee => [
+      employee.titulo || '',
+      employee.email || '',
+      employee.cargo || '',
+      employee.nivel || '',
+      `R$ ${Number(employee.salario || 0).toLocaleString('pt-BR')}`,
+      employee.status || 'Active'
+    ]);
   
-    sortedCollaborators.forEach(employee => {
-      const employeeData = [
-        employee.titulo || '',
-        employee.email || '',
-        employee.cargo || '',
-        employee.nivel || '',
-        `R$ ${Number(employee.salario || 0).toLocaleString('pt-BR')}`,
-        employee.status || 'Active'
-      ];
-      tableRows.push(employeeData);
-    });
-  
-    autoTable(doc, {
+    autoTable(pdfDoc, {
       head: [tableColumn],
       body: tableRows,
       startY: 20,
@@ -317,8 +191,8 @@ export const Dashboard = ({ onAddNew }: DashboardProps) => {
       headStyles: { fillColor: [0, 200, 83] }
     });
   
-    doc.text("Colaboradores", 14, 15);
-    doc.save(`colaboradores_flugo_${new Date().getTime()}.pdf`);
+    pdfDoc.text("Relatório de Colaboradores", 14, 15);
+    pdfDoc.save(`colaboradores_${new Date().getTime()}.pdf`);
   };
   
   const exportToExcel = () => {
@@ -334,10 +208,10 @@ export const Dashboard = ({ onAddNew }: DashboardProps) => {
     const worksheet = XLSX.utils.json_to_sheet(worksheetData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Colaboradores");
-    
-    XLSX.writeFile(workbook, `colaboradores_flugo_${new Date().getTime()}.xlsx`);
+    XLSX.writeFile(workbook, `relatorio_flugo.xlsx`);
   };
 
+  // Handler de Atualização Inline
   const updateField = async (id: string, field: string, newValue: any) => {
     try {
       const docRef = doc(db, "colaboradores", id);
@@ -350,248 +224,102 @@ export const Dashboard = ({ onAddNew }: DashboardProps) => {
     }
   };
 
+  const handleSortClick = (property: SortKey) => {
+    const isAsc = sortBy === property && order === 'asc';
+    setOrder(isAsc ? 'desc' : 'asc');
+    setSortBy(property);
+  };
+  
   return (
     <NavbarsLayout>
-    
-    <Box sx={{ display: 'flex', height: '100vh', bgcolor: '#f5f5f5' }}>
-
-      <Box sx={{ flexGrow: 1, p: 4 }}>
-        <Box sx={{ display: 'flex', gap: 3, mb: 4, flexWrap: 'wrap' }}>
-            <StatCard 
-              title="Total de Colaboradores" 
-              value={collaboratorTotal} 
-              color="#00c853"
-            />
-            <StatCard 
-              title="Média Salarial" 
-              value={averageSalary.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} 
-              color="#0288d1"
-            />
-            <StatCard 
-              title="Maior Depto" 
-              value={deptoMorePeaple()} 
-              color="#ffa000"
-            />
-        </Box>
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center', 
-          mb: 4, 
-          flexWrap: 'wrap', 
-          gap: 2 
-        }}>
-          <Typography variant="h5" fontWeight="bold">Colaboradores</Typography>
+      <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: '#f5f5f5' }}>
+        <Box sx={{ flexGrow: 1, p: 4 }}>
           
-          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
-          {selected.length > 0 && (
-              <Button
-                  variant="outlined"
-                  color="error"
-                  startIcon={<DeleteIcon />}
-                  onClick={handleDeleteSelected}
-                  sx={{ textTransform: 'none', fontWeight: 'bold' }}
-              >
-                  Excluir selecionados
-              </Button>
-            )}
-            <Button 
-              variant="outlined" 
-              color="error" 
-              startIcon={<PictureAsPdfIcon />} 
-              onClick={exportToPDF}
-              sx={{ textTransform: 'none', fontWeight: 'bold' }}
-            >
-              Export PDF
-            </Button>
-            
-            <Button 
-              variant="outlined" 
-              color="primary" 
-              startIcon={<TableChartIcon />} 
-              onClick={exportToExcel}
-              sx={{ textTransform: 'none', fontWeight: 'bold' }}
-            >
-              Export Excel
-            </Button>
-
-            <Button 
-              variant="contained" 
-              onClick={onAddNew}
-              sx={{ 
-                bgcolor: '#00c853', 
-                color: '#ffffff', 
-                px: { xs: 2, md: 3 }, 
-                fontSize: { xs: '0.8rem', md: '0.9rem' }, 
-                '&:hover': { bgcolor: '#00a844' }, 
-                textTransform: 'none', 
-                fontWeight: 'bold',
-                boxShadow: 'none'
-              }}
-            >
-              Novo Colaborador
-            </Button>
+          {/* Cards de Estatísticas */}
+          <Box sx={{ display: 'flex', gap: 3, mb: 4, flexWrap: 'wrap' }}>
+              <StatCard title="Total de Colaboradores" value={collaboratorTotal} color="#00c853" />
+              <StatCard title="Média Salarial" value={averageSalary.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} color="#0288d1" />
+              <StatCard title="Maior Depto" value={getLargestDepartment()} color="#ffa000" />
           </Box>
-        </Box>        
-        <Box sx={{ 
-          display: 'flex', 
-          gap: 2, 
-          mb: 3, 
-          flexWrap: 'wrap',
-          p: 2,
-          bgcolor: 'white',
-          borderRadius: 2,
-          border: '1px solid #eee'
-        }}>
-          <TextField
-            label="Buscar por nome"
-            variant="outlined"
-            size="small"
-            sx={{ flexGrow: 1, minWidth: '200px' }}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
 
-          <TextField
-            select
-            label="Filtrar por Departamento"
-            variant="outlined"
-            size="small"
-            sx={{ minWidth: '200px' }}
-            value={filterDept}
-            onChange={(e) => setFilterDept(e.target.value)}
-          >
-            <MenuItem value="Todos">Todos os Departamentos</MenuItem>
-            {dbDepartments.map((dept) => (
-              <MenuItem key={dept.value} value={dept.value}>
-                {dept.label}
-              </MenuItem>
-            ))}
-          </TextField>
-        </Box>
-        <FormControl size="small" sx={{ minWidth: 200 }}>
-        <InputLabel>Ordenar por</InputLabel>
-        <Select
-          value={sortBy}
-          label="Ordenar por"
-          onChange={(e) => setSortBy(e.target.value as SortKey)}
-        >
-          <MenuItem value="titulo">Nome</MenuItem>
-          <MenuItem value="email">E-mail</MenuItem>
-          <MenuItem value="cargo">Departamento</MenuItem>
-          <MenuItem value="nivel">Nível</MenuItem>
-          <MenuItem value="salario">Salário</MenuItem>
-        </Select>
-      </FormControl>
-
-      <IconButton 
-        onClick={() => setOrder(order === 'asc' ? 'desc' : 'asc')}
-        sx={{ bgcolor: '#f5f5f5' }}
-      >
-        <SwapVertIcon color={order === 'asc' ? 'primary' : 'secondary'} />
-      </IconButton>
-        <TableContainer component={Paper} sx={{ borderRadius: 2, boxShadow: 'none', border: '1px solid #eee', overflowX: 'auto'}}>
-          <Table sx={{ minWidth: 650 }}>
-            <TableHead sx={{ bgcolor: '#f8f9fa' }}>
-              <TableRow>
-                <TableCell padding="checkbox">
-                  <Checkbox
-                      color="primary"
-                      indeterminate={selected.length > 0 && selected.length < sortedCollaborators.length}
-                      checked={sortedCollaborators.length > 0 && selected.length === sortedCollaborators.length}
-                      onChange={handleSelectAll}
-                  />
-                </TableCell>
-                <TableCell sx={{ fontWeight: 'bold', color: '#546e7a' }}>Nome</TableCell>
-                <TableCell sx={{ fontWeight: 'bold', color: '#546e7a' }}>Email</TableCell>
-                <TableCell sx={{ fontWeight: 'bold', color: '#546e7a' }}>Departamento</TableCell>
-                <TableCell sx={{ fontWeight: 'bold', color: '#546e7a' }}>Nível</TableCell>
-                <TableCell sx={{ fontWeight: 'bold', color: '#546e7a' }}>Salário</TableCell>
-                <TableCell sx={{ fontWeight: 'bold', color: '#546e7a' }}>Status</TableCell>
-                <TableCell sx={{ fontWeight: 'bold', color: '#546e7a' }}></TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {sortedCollaborators.map((collaborator) => {
-                const isItemSelected = selected.includes(collaborator.id);
-                return (
-                <TableRow key={collaborator.id} hover selected={isItemSelected}>
-                  <TableCell padding="checkbox">
-                    <Checkbox
-                      color="primary"
-                      checked={isItemSelected}
-                      onChange={(event) => handleSelectOne(event, collaborator.id)}
-                    />
-                  </TableCell>
-                  <EditableTableCell 
-                    initialValue={collaborator.titulo || ''} 
-                    onSave={(newValue) => updateField(collaborator.id, 'titulo', newValue)}
-                    avatar={
-                      <EditableAvatar 
-                        name={collaborator.titulo || ''} 
-                        imageUrl={collaborator.avatarUrl}
-                        onSave={(base64) => updateField(collaborator.id, 'avatarUrl', base64)} 
-                      />
-                    }
-                  />
-
-                  <EditableTableCell 
-                    initialValue={collaborator.email || ''} 
-                    onSave={(newValue) => updateField(collaborator.id, 'email', newValue)}
-                  />
-
-                  <EditableTableCell 
-                    initialValue={collaborator.cargo || ''} 
-                    options={dbDepartments}
-                    onSave={(newValue) => updateField(collaborator.id, 'cargo', newValue)}
-                  />
-
-                  <EditableTableCell 
-                        initialValue={collaborator.nivel || 'Júnior'} 
-                        options={levelOptions}
-                        onSave={(newValue) => updateField( collaborator.id, 'nivel', newValue)}
-                  />
-                  
-                  <EditableTableCell 
-                    initialValue={
-                      collaborator.salario 
-                        ? `R$ ${Number(collaborator.salario).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` 
-                        : 'R$ 0,00'
-                    } 
-                    onSave={(newValue) => {
-                      const numericValue = newValue.replace(/\D/g, "");
-                      updateField(collaborator.id, 'salario', Number(numericValue) / 100);
-                    }}
-                  />
-                  <TableCell>
-                    <Chip 
-                      label={collaborator.status === 'Ativo' ? 'Ativo' : 'Inativo'} 
-                      color={collaborator.status === 'Ativo' ? 'success' : 'default'} 
-                      variant={collaborator.status === 'Ativo' ? "filled" : "outlined"}
-                      size="small"
-                      sx={{ fontWeight: 'bold' }}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <IconButton onClick={() => deleteCollaborator(collaborator.id)} color="error">
-                      <DeleteIcon />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
-              )})}
-              
-              {sortedCollaborators.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={8} align="center" sx={{ py: 6, color: '#999' }}>
-                    Nenhum colaborador encontrado para esta busca.
-                  </TableCell>
-                </TableRow>
+          {/* Cabeçalho de Ações */}
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4, flexWrap: 'wrap', gap: 2 }}>
+            <Typography variant="h5" fontWeight="bold">Colaboradores</Typography>
+            
+            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+              {selected.length > 0 && (
+                <Button variant="outlined" color="error" startIcon={<DeleteIcon />} onClick={handleDeleteSelected}>
+                  Excluir ({selected.length})
+                </Button>
               )}
-            </TableBody>
-          </Table>
-        </TableContainer>
+              <Button variant="outlined" color="error" startIcon={<PictureAsPdfIcon />} onClick={exportToPDF}>PDF</Button>
+              <Button variant="outlined" color="primary" startIcon={<TableChartIcon />} onClick={exportToExcel}>Excel</Button>
+              <Button variant="contained" onClick={onAddNew} sx={{ bgcolor: '#00c853', '&:hover': { bgcolor: '#00a844' } }}>
+                Novo Colaborador
+              </Button>
+            </Box>
+          </Box>        
+
+          {/* Barra de Filtros e Sort */}
+          <Box sx={{ display: 'flex', gap: 2, mb: 3, p: 2, bgcolor: 'white', borderRadius: 2, border: '1px solid #eee', alignItems: 'center' }}>
+            <TextField
+              label="Buscar por nome"
+              variant="outlined"
+              size="small"
+              sx={{ flexGrow: 1 }}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+
+            <TextField
+              select
+              label="Filtrar por Departamento"
+              variant="outlined"
+              size="small"
+              sx={{ minWidth: '200px' }}
+              value={departmentFilter}
+              onChange={(e) => setDepartmentFilter(e.target.value)}
+            >
+              <MenuItem value="Todos">Todos os Departamentos</MenuItem>
+              {dbDepartments.map((dept) => (
+                <MenuItem key={dept.value} value={dept.value}>{dept.label}</MenuItem>
+              ))}
+            </TextField>
+
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, borderLeft: '1px solid #ddd', pl: 2 }}>
+              <FormControl size="small" sx={{ minWidth: 150 }}>
+                <InputLabel>Ordenar por</InputLabel>
+                <Select value={sortBy} label="Ordenar por" onChange={(e) => setSortBy(e.target.value as SortKey)}>
+                  <MenuItem value="titulo">Nome</MenuItem>
+                  <MenuItem value="email">E-mail</MenuItem>
+                  <MenuItem value="cargo">Departamento</MenuItem>
+                  <MenuItem value="nivel">Nível</MenuItem>
+                  <MenuItem value="salario">Salário</MenuItem>
+                </Select>
+              </FormControl>
+
+              <IconButton onClick={() => setOrder(order === 'asc' ? 'desc' : 'asc')}>
+                <SwapVertIcon color={order === 'asc' ? 'primary' : 'secondary'} />
+              </IconButton>
+            </Box>
+          </Box>
+          
+          {/* Tabela de Colaboradores (Componente Separado) */}
+          <CollaboratorTable 
+              collaborators={sortedCollaborators}
+              selected={selected}
+              sortBy={sortBy}
+              order={order}
+              dbDepartments={dbDepartments}
+              levelOptions={LEVEL_OPTIONS} // Usando do arquivo de types
+              onSortClick={handleSortClick}
+              onSelectAll={handleSelectAll}
+              onSelectOne={handleSelectOne}
+              onUpdateField={updateField}
+              onDelete={deleteCollaborator}
+          />
+        </Box>
       </Box>
-    </Box>
     </NavbarsLayout>
   );
 };
