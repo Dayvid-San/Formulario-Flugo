@@ -2,19 +2,20 @@ import {
   Box, Button, Typography, Table, TableBody, 
   TableCell, TableContainer, TableHead, TableRow, 
   Paper, Avatar, Chip, TextField, MenuItem, 
-  IconButton,
+  IconButton, FormControl, InputLabel, Select,
   Checkbox
 } from '@mui/material';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import TableChartIcon from '@mui/icons-material/TableChart';
 import DeleteIcon from '@mui/icons-material/Delete';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { collection, onSnapshot, doc, updateDoc, deleteDoc, writeBatch } from "firebase/firestore";
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import { db } from "../../services/firebase";
 import { NavbarsLayout } from '../../components/NavbarsLayout';
+import SwapVertIcon from '@mui/icons-material/SwapVert'; 
 
 
 interface EditableAvatarProps {
@@ -138,14 +139,30 @@ interface DashboardProps {
   onAddNew: () => void;
 }
 
+const StatCard = ({ title, value, color }: { title: string, value: string | number, color: string }) => (
+  <Paper sx={{ 
+    p: 3, flex: 1, minWidth: '200px', borderRadius: 3, 
+    borderLeft: `6px solid ${color}`, boxShadow: '0 2px 12px rgba(0,0,0,0.05)' 
+  }}>
+    <Typography variant="caption" color="text.secondary" fontWeight="bold" sx={{ textTransform: 'uppercase' }}>
+      {title}
+    </Typography>
+    <Typography variant="h4" fontWeight="bold" sx={{ mt: 1, color: '#263238' }}>
+      {value}
+    </Typography>
+  </Paper>
+);
+
 export const Dashboard = ({ onAddNew }: DashboardProps) => {
+  type SortKey = 'titulo' | 'email' | 'cargo' | 'nivel' | 'salario';
+
+  const [sortBy, setSortBy] = useState<SortKey>('titulo');
+  const [order, setOrder] = useState<'asc' | 'desc'>('asc');
   const [collaborators, setCollaborators] = useState<any[]>([]);
   const [dbDepartments, setDbDepartments] = useState<{ value: string, label: string }[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterDept, setFilterDept] = useState('Todos');
   const [selected, setSelected] = useState<string[]>([]);
-
-  const collaboratorTotal = collaborators.length;
 
   const levelOptions = [
     { value: 'Júnior', label: 'Júnior' },
@@ -179,15 +196,55 @@ export const Dashboard = ({ onAddNew }: DashboardProps) => {
       return () => unsubscribe();
   }, []);
 
-  const filteredCollaborators = collaborators.filter(colab => {
-    const matchesName = colab.titulo?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesDept = filterDept === 'Todos' || colab.cargo === filterDept;
-    return matchesName && matchesDept;
-  });
+  const filteredCollaborators = useMemo(() => {
+    return collaborators.filter(colab => {
+      const matchesName = colab.titulo?.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesDept = filterDept === 'Todos' || colab.cargo === filterDept;
+      return matchesName && matchesDept;
+    });
+  }, [collaborators, searchTerm, filterDept]);
+
+  const sortedCollaborators = useMemo(() => {
+    const sortable = [...filteredCollaborators];
+    sortable.sort((a, b) => {
+      const fieldA = a[sortBy];
+      const fieldB = b[sortBy];
+
+      let comparison = 0;
+
+      if (sortBy === 'salario') {
+        const numA = Number(fieldA || 0);
+        const numB = Number(fieldB || 0);
+        comparison = numA - numB;
+      } else {
+        const strA = String(fieldA || '');
+        const strB = String(fieldB || '');
+        comparison = strA.localeCompare(strB);
+      }
+      
+      return order === 'asc' ? comparison : -comparison;
+    });
+    return sortable;
+  }, [filteredCollaborators, sortBy, order]);
+
+  const collaboratorTotal = collaborators.length;
+
+  const averageSalary = collaboratorTotal > 0 
+    ? collaborators.reduce((acc, curr) => acc + (Number(curr.salario) || 0), 0) / collaboratorTotal 
+    : 0;
+
+  const deptoMorePeaple = () => {
+    if (collaboratorTotal === 0) return "Nenhum";
+    const counts = collaborators.reduce((acc: any, curr) => {
+      acc[curr.cargo] = (acc[curr.cargo] || 0) + 1;
+      return acc;
+    }, {});
+    return Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b);
+  };
 
   const handleSelectAll = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.checked) {
-      const newSelecteds = filteredCollaborators.map((n) => n.id);
+      const newSelecteds = sortedCollaborators.map((n) => n.id);
       setSelected(newSelecteds);
       return;
     }
@@ -240,7 +297,7 @@ export const Dashboard = ({ onAddNew }: DashboardProps) => {
     const tableColumn = ["Nome", "Email", "Departamento", "Nível", "Salario", "Status"];
     const tableRows: any[] = [];
   
-    filteredCollaborators.forEach(employee => {
+    sortedCollaborators.forEach(employee => {
       const employeeData = [
         employee.titulo || '',
         employee.email || '',
@@ -265,7 +322,7 @@ export const Dashboard = ({ onAddNew }: DashboardProps) => {
   };
   
   const exportToExcel = () => {
-    const worksheetData = filteredCollaborators.map(employee => ({
+    const worksheetData = sortedCollaborators.map(employee => ({
       Name: employee.titulo,
       Email: employee.email,
       Department: employee.cargo,
@@ -292,33 +349,6 @@ export const Dashboard = ({ onAddNew }: DashboardProps) => {
       console.error("Erro ao atualizar:", error);
     }
   };
-  
-  const averageSalary = collaboratorTotal > 0 
-    ? collaborators.reduce((acc, curr) => acc + (Number(curr.salario) || 0), 0) / collaboratorTotal 
-    : 0;
-
-  const deptoMorePeaple = () => {
-    if (collaboratorTotal === 0) return "Nenhum";
-    const counts = collaborators.reduce((acc: any, curr) => {
-      acc[curr.cargo] = (acc[curr.cargo] || 0) + 1;
-      return acc;
-    }, {});
-    return Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b);
-  };
-
-  const StatCard = ({ title, value, color }: { title: string, value: string | number, color: string }) => (
-    <Paper sx={{ 
-      p: 3, flex: 1, minWidth: '200px', borderRadius: 3, 
-      borderLeft: `6px solid ${color}`, boxShadow: '0 2px 12px rgba(0,0,0,0.05)' 
-    }}>
-      <Typography variant="caption" color="text.secondary" fontWeight="bold" sx={{ textTransform: 'uppercase' }}>
-        {title}
-      </Typography>
-      <Typography variant="h4" fontWeight="bold" sx={{ mt: 1, color: '#263238' }}>
-        {value}
-      </Typography>
-    </Paper>
-  );
 
   return (
     <NavbarsLayout>
@@ -439,7 +469,27 @@ export const Dashboard = ({ onAddNew }: DashboardProps) => {
             ))}
           </TextField>
         </Box>
-        
+        <FormControl size="small" sx={{ minWidth: 200 }}>
+        <InputLabel>Ordenar por</InputLabel>
+        <Select
+          value={sortBy}
+          label="Ordenar por"
+          onChange={(e) => setSortBy(e.target.value as SortKey)}
+        >
+          <MenuItem value="titulo">Nome</MenuItem>
+          <MenuItem value="email">E-mail</MenuItem>
+          <MenuItem value="cargo">Departamento</MenuItem>
+          <MenuItem value="nivel">Nível</MenuItem>
+          <MenuItem value="salario">Salário</MenuItem>
+        </Select>
+      </FormControl>
+
+      <IconButton 
+        onClick={() => setOrder(order === 'asc' ? 'desc' : 'asc')}
+        sx={{ bgcolor: '#f5f5f5' }}
+      >
+        <SwapVertIcon color={order === 'asc' ? 'primary' : 'secondary'} />
+      </IconButton>
         <TableContainer component={Paper} sx={{ borderRadius: 2, boxShadow: 'none', border: '1px solid #eee', overflowX: 'auto'}}>
           <Table sx={{ minWidth: 650 }}>
             <TableHead sx={{ bgcolor: '#f8f9fa' }}>
@@ -447,8 +497,8 @@ export const Dashboard = ({ onAddNew }: DashboardProps) => {
                 <TableCell padding="checkbox">
                   <Checkbox
                       color="primary"
-                      indeterminate={selected.length > 0 && selected.length < filteredCollaborators.length}
-                      checked={filteredCollaborators.length > 0 && selected.length === filteredCollaborators.length}
+                      indeterminate={selected.length > 0 && selected.length < sortedCollaborators.length}
+                      checked={sortedCollaborators.length > 0 && selected.length === sortedCollaborators.length}
                       onChange={handleSelectAll}
                   />
                 </TableCell>
@@ -462,7 +512,7 @@ export const Dashboard = ({ onAddNew }: DashboardProps) => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {filteredCollaborators.map((collaborator) => {
+              {sortedCollaborators.map((collaborator) => {
                 const isItemSelected = selected.includes(collaborator.id);
                 return (
                 <TableRow key={collaborator.id} hover selected={isItemSelected}>
@@ -499,7 +549,7 @@ export const Dashboard = ({ onAddNew }: DashboardProps) => {
                   <EditableTableCell 
                         initialValue={collaborator.nivel || 'Júnior'} 
                         options={levelOptions}
-                        onSave={(newValue) => updateField(collaborator.id, 'nivel', newValue)}
+                        onSave={(newValue) => updateField( collaborator.id, 'nivel', newValue)}
                   />
                   
                   <EditableTableCell 
@@ -530,7 +580,7 @@ export const Dashboard = ({ onAddNew }: DashboardProps) => {
                 </TableRow>
               )})}
               
-              {filteredCollaborators.length === 0 && (
+              {sortedCollaborators.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={8} align="center" sx={{ py: 6, color: '#999' }}>
                     Nenhum colaborador encontrado para esta busca.
