@@ -47,7 +47,7 @@ export const MultiStepForm = ({ onCancel }: { onCancel: () => void }) => {
         nivel: allData.level,
         salario: Number(allData.salary),
         admissionDate: allData.admissionDate,
-        responsibleManager: allData.responsibleManager,
+        responsibleManager: allData.responsibleManager || '',
         createdAt: new Date().toISOString()
       });
       
@@ -129,7 +129,12 @@ export const MultiStepForm = ({ onCancel }: { onCancel: () => void }) => {
                 <StepPersonalData onNext={handleNextStep} onCancel={onCancel} data={formData} />
               )}
               {activeStep === 1 && (
-                <StepJobData onNext={handleNextStep} onBack={handleBack} data={formData} departments={departmentList} />
+                  <StepJobData 
+                    onNext={handleNextStep} 
+                    onBack={handleBack} 
+                    data={formData} 
+                    departments={departmentList} 
+                  />
               )}
             </Box>
           </Grid>

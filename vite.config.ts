@@ -4,6 +4,13 @@ import react from '@vitejs/plugin-react'
 // https://vitejs.dev/config/ 
 export default defineConfig({
   plugins: [react()],
+  server: {
+    host: true, // Listens on all local IPs
+    strictPort: true,
+    hmr: {
+      clientPort: 443, // Forces WebSocket to use the secure port of your cloud IDE
+    }
+  },
   build: {
     // Aumentamos o limite para 1000kb para o aviso de tamanho sumir
     chunkSizeWarningLimit: 1000, 
