@@ -135,6 +135,8 @@ interface DashboardProps {
 export const Dashboard = ({ onAddNew }: DashboardProps) => {
   const [collaborators, setCollaborators] = useState<any[]>([]);
   const [dbDepartments, setDbDepartments] = useState<{ value: string, label: string }[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterDept, setFilterDept] = useState('Todos');
 
   useEffect(() => {
     const collaboratorsRef = collection(db, "colaboradores");
@@ -167,6 +169,12 @@ export const Dashboard = ({ onAddNew }: DashboardProps) => {
     }
   };
 
+  const filteredCollaborators = collaborators.filter(colab => {
+    const matchesName = colab.titulo?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesDept = filterDept === 'Todos' || colab.cargo === filterDept;
+    return matchesName && matchesDept;
+  });
+
   const updateField = async (id: string, field: string, newValue: string) => {
     try {
       const docRef = doc(db, "colaboradores", id);
@@ -194,7 +202,44 @@ export const Dashboard = ({ onAddNew }: DashboardProps) => {
             Novo Colaborador
           </Button>
         </Box>
+        <Box sx={{ 
+          display: 'flex', 
+          gap: 2, 
+          mb: 3, 
+          flexWrap: 'wrap',
+          p: 2,
+          bgcolor: 'white',
+          borderRadius: 2,
+          border: '1px solid #eee'
+        }}>
+          {/* Busca por Nome */}
+          <TextField
+            label="Buscar por nome"
+            variant="outlined"
+            size="small"
+            sx={{ flexGrow: 1, minWidth: '200px' }}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
 
+          {/* Filtro por Departamento */}
+          <TextField
+            select
+            label="Filtrar por Departamento"
+            variant="outlined"
+            size="small"
+            sx={{ minWidth: '200px' }}
+            value={filterDept}
+            onChange={(e) => setFilterDept(e.target.value)}
+          >
+            <MenuItem value="Todos">Todos os Departamentos</MenuItem>
+            {dbDepartments.map((dept) => (
+              <MenuItem key={dept.value} value={dept.value}>
+                {dept.label}
+              </MenuItem>
+            ))}
+          </TextField>
+        </Box>
         <TableContainer component={Paper} sx={{ borderRadius: 2, boxShadow: 'none', border: '1px solid #eee', overflowX: 'auto'}}>
           <Table sx={{ minWidth: 650 }}>
             <TableHead sx={{ bgcolor: '#f8f9fa' }}>
@@ -207,7 +252,7 @@ export const Dashboard = ({ onAddNew }: DashboardProps) => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {collaborators.map((collaborator) => (
+              {filteredCollaborators.map((collaborator) => (
                 <TableRow key={collaborator.id} hover>
                   <EditableTableCell 
                     initialValue={collaborator.titulo || ''} 
@@ -249,10 +294,10 @@ export const Dashboard = ({ onAddNew }: DashboardProps) => {
                 </TableRow>
               ))}
               
-              {collaborators.length === 0 && (
+              {filteredCollaborators.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={4} align="center" sx={{ py: 6, color: '#999' }}>
-                    Nenhum colaborador cadastrado ainda.
+                  <TableCell colSpan={5} align="center" sx={{ py: 6, color: '#999' }}>
+                    Nenhum colaborador encontrado para esta busca.
                   </TableCell>
                 </TableRow>
               )}
