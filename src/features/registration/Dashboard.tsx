@@ -138,6 +138,15 @@ export const Dashboard = ({ onAddNew }: DashboardProps) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterDept, setFilterDept] = useState('Todos');
 
+  const collaboratorTotal = collaborators.length;
+
+  const levelOptions = [
+    { value: 'Júnior', label: 'Júnior' },
+    { value: 'Pleno', label: 'Pleno' },
+    { value: 'Sênior', label: 'Sênior' },
+    { value: 'Gestor', label: 'Gestor' },
+  ];
+
   useEffect(() => {
     const collaboratorsRef = collection(db, "colaboradores");
     const unsubscribe = onSnapshot(collaboratorsRef, (snapshot) => {
@@ -175,16 +184,46 @@ export const Dashboard = ({ onAddNew }: DashboardProps) => {
     return matchesName && matchesDept;
   });
 
-  const updateField = async (id: string, field: string, newValue: string) => {
+  const updateField = async (id: string, field: string, newValue: any) => {
     try {
       const docRef = doc(db, "colaboradores", id);
       await updateDoc(docRef, {
-        [field]: newValue
+        [field]: newValue,
+        updatedAt: new Date().toISOString()
       });
     } catch (error) {
-      console.error("Erro ao atualizar o Firebase:", error);
+      console.error("Erro ao atualizar:", error);
     }
   };
+  
+  const averageSalary = collaboratorTotal > 0 
+    ? collaborators.reduce((acc, curr) => acc + (Number(curr.salario) || 0), 0) / collaboratorTotal 
+    : 0;
+
+  const deptoMorePeaple = () => {
+    if (collaboratorTotal === 0) return "Nenhum";
+    const counts = collaborators.reduce((acc: any, curr) => {
+      acc[curr.cargo] = (acc[curr.cargo] || 0) + 1;
+      return acc;
+    }, {});
+    return Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b);
+  };
+
+  const StatCard = ({ title, value, color }: { title: string, value: string | number, color: string }) => (
+    <Paper sx={{ 
+      p: 3, flex: 1, minWidth: '200px', borderRadius: 3, 
+      borderLeft: `6px solid ${color}`, boxShadow: '0 2px 12px rgba(0,0,0,0.05)' 
+    }}>
+      <Typography variant="caption" color="text.secondary" fontWeight="bold" sx={{ textTransform: 'uppercase' }}>
+        {title}
+      </Typography>
+      <Typography variant="h4" fontWeight="bold" sx={{ mt: 1, color: '#263238' }}>
+        {value}
+      </Typography>
+    </Paper>
+  );
+
+
 
   return (
     <NavbarsLayout>
@@ -192,12 +231,29 @@ export const Dashboard = ({ onAddNew }: DashboardProps) => {
     <Box sx={{ display: 'flex', height: '100vh', bgcolor: '#f5f5f5' }}>
 
       <Box sx={{ flexGrow: 1, p: 4 }}>
+        <Box sx={{ display: 'flex', gap: 3, mb: 4, flexWrap: 'wrap' }}>
+            <StatCard 
+              title="Total de Colaboradores" 
+              value={collaboratorTotal} 
+              color="#00c853"
+            />
+            <StatCard 
+              title="Média Salarial" 
+              value={averageSalary.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} 
+              color="#0288d1"
+            />
+            <StatCard 
+              title="Maior Depto" 
+              value={deptoMorePeaple()} 
+              color="#ffa000"
+            />
+        </Box>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 4 }}>
           <Typography variant="h5" fontWeight="bold">Colaboradores</Typography>
           <Button 
             variant="contained" 
             onClick={onAddNew}
-            sx={{ bgcolor: '#00c853', color: '#ffffff', px: { xs: 2, md: 4 }, fontSize: { xs: '0.8rem', md: '0.9rem' }, '&:hover': { bgcolor: '#00a844' }, textTransform: 'none', fontWeight: 'bold' }}
+            sx={{ bgcolor: '#00c853', color: '#ffffff', px: { xs: 2, md: 2 }, fontSize: { xs: '0.8rem', md: '0.9rem' }, '&:hover': { bgcolor: '#00a844' }, textTransform: 'none', fontWeight: 'bold' }}
           >
             Novo Colaborador
           </Button>
@@ -212,7 +268,6 @@ export const Dashboard = ({ onAddNew }: DashboardProps) => {
           borderRadius: 2,
           border: '1px solid #eee'
         }}>
-          {/* Busca por Nome */}
           <TextField
             label="Buscar por nome"
             variant="outlined"
@@ -247,6 +302,8 @@ export const Dashboard = ({ onAddNew }: DashboardProps) => {
                 <TableCell sx={{ fontWeight: 'bold', color: '#546e7a' }}>Nome</TableCell>
                 <TableCell sx={{ fontWeight: 'bold', color: '#546e7a' }}>Email</TableCell>
                 <TableCell sx={{ fontWeight: 'bold', color: '#546e7a' }}>Departamento</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', color: '#546e7a' }}>Nível</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', color: '#546e7a' }}>Salário</TableCell>
                 <TableCell sx={{ fontWeight: 'bold', color: '#546e7a' }}>Status</TableCell>
                 <TableCell sx={{ fontWeight: 'bold', color: '#546e7a' }}></TableCell>
               </TableRow>
@@ -276,7 +333,24 @@ export const Dashboard = ({ onAddNew }: DashboardProps) => {
                     options={dbDepartments}
                     onSave={(newValue) => updateField(collaborator.id, 'cargo', newValue)}
                   />
+
+                  <EditableTableCell 
+                        initialValue={collaborator.nivel || 'Júnior'} 
+                        options={levelOptions}
+                        onSave={(newValue) => updateField(collaborator.id, 'nivel', newValue)}
+                  />
                   
+                  <EditableTableCell 
+                    initialValue={
+                      collaborator.salario 
+                        ? `R$ ${Number(collaborator.salario).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` 
+                        : 'R$ 0,00'
+                    } 
+                    onSave={(newValue) => {
+                      const numericValue = newValue.replace(/\D/g, "");
+                      updateField(collaborator.id, 'salario', Number(numericValue) / 100);
+                    }}
+                  />
                   <TableCell>
                     <Chip 
                       label={collaborator.status === 'Ativo' ? 'Ativo' : 'Inativo'} 
