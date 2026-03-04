@@ -11,11 +11,10 @@ import {
 } from '@mui/material';
 import Grid from '@mui/material/Grid';
 
-// 1. Sugestão: Use 'nome' em vez de 'titulo' para ficar mais claro no RH
 const personalSchema = z.object({
-  nome: z.string().min(3, "O nome deve ter pelo menos 3 caracteres"),
+  name: z.string().min(3, "O nome deve ter pelo menos 3 caracteres"),
   email: z.string().email("E-mail inválido").min(1, "O e-mail é obrigatório"),
-  ativo: z.boolean(),
+  active: z.boolean(),
 });
 
 type PersonalFormData = z.infer<typeof personalSchema>;
@@ -24,9 +23,9 @@ export const StepPersonalData = ({ onNext, data, onCancel }: any) => {
   const { register, handleSubmit, control, formState: { errors } } = useForm<PersonalFormData>({
     resolver: zodResolver(personalSchema),
     defaultValues: {
-      nome: data?.nome || "", // Mapeando o que já existe
+      name: data?.name || "",
       email: data?.email || "",
-      ativo: data?.ativo ?? true,
+      active: data?.active ?? true,
     }
   });
 
@@ -48,12 +47,12 @@ export const StepPersonalData = ({ onNext, data, onCancel }: any) => {
         <Grid container spacing={3} sx={{ flexGrow: 1 }}> 
           <Grid item xs={12}>
             <TextField 
-              {...register('nome')} 
+              {...register('name')} 
               label="Nome Completo" 
               fullWidth 
               placeholder="João da Silva"
-              error={!!errors.nome} 
-              helperText={errors.nome?.message}
+              error={!!errors.name} 
+              helperText={errors.name?.message}
               InputLabelProps={{ shrink: true }} 
               sx={greenInputStyle}
             />
@@ -76,7 +75,7 @@ export const StepPersonalData = ({ onNext, data, onCancel }: any) => {
             <FormControlLabel
               control={
                 <Controller
-                  name="ativo" 
+                  name="active" 
                   control={control}
                   render={({ field }) => (
                     <Switch 
@@ -95,7 +94,6 @@ export const StepPersonalData = ({ onNext, data, onCancel }: any) => {
           </Grid>
         </Grid>
         
-        {/* Rodapé de Navegação */}
         <Box sx={{ 
           display: 'flex', 
           justifyContent: 'space-between', 

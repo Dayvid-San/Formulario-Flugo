@@ -2,14 +2,14 @@ import {
   Box, Button, Typography, Table, TableBody, 
   TableCell, TableContainer, TableHead, TableRow, 
   Paper, Avatar, Chip, TextField, MenuItem, 
-  IconButton
+  IconButton,
+  Checkbox
 } from '@mui/material';
-import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import TableChartIcon from '@mui/icons-material/TableChart';
 import DeleteIcon from '@mui/icons-material/Delete';
 import React, { useState, useEffect, useRef } from 'react';
-import { collection, onSnapshot, doc, updateDoc, deleteDoc } from "firebase/firestore";
+import { collection, onSnapshot, doc, updateDoc, deleteDoc, writeBatch } from "firebase/firestore";
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
@@ -143,6 +143,7 @@ export const Dashboard = ({ onAddNew }: DashboardProps) => {
   const [dbDepartments, setDbDepartments] = useState<{ value: string, label: string }[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterDept, setFilterDept] = useState('Todos');
+  const [selected, setSelected] = useState<string[]>([]);
 
   const collaboratorTotal = collaborators.length;
 
@@ -178,17 +179,61 @@ export const Dashboard = ({ onAddNew }: DashboardProps) => {
       return () => unsubscribe();
   }, []);
 
-  const deleteCollaborator = async (id: string) => {
-    if (window.confirm("Deseja realmente excluir este colaborador?")) {
-      await deleteDoc(doc(db, "colaboradores", id));
-    }
-  };
-
   const filteredCollaborators = collaborators.filter(colab => {
     const matchesName = colab.titulo?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesDept = filterDept === 'Todos' || colab.cargo === filterDept;
     return matchesName && matchesDept;
   });
+
+  const handleSelectAll = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.checked) {
+      const newSelecteds = filteredCollaborators.map((n) => n.id);
+      setSelected(newSelecteds);
+      return;
+    }
+    setSelected([]);
+  };
+
+  const handleSelectOne = (_event: React.ChangeEvent<HTMLInputElement>, id: string) => {
+    const selectedIndex = selected.indexOf(id);
+    let newSelected: string[] = [];
+
+    if (selectedIndex === -1) {
+      newSelected = newSelected.concat(selected, id);
+    } else if (selectedIndex === 0) {
+      newSelected = newSelected.concat(selected.slice(1));
+    } else if (selectedIndex === selected.length - 1) {
+      newSelected = newSelected.concat(selected.slice(0, -1));
+    } else if (selectedIndex > 0) {
+      newSelected = newSelected.concat(
+        selected.slice(0, selectedIndex),
+        selected.slice(selectedIndex + 1)
+      );
+    }
+    setSelected(newSelected);
+  };
+
+  const deleteCollaborator = async (id: string) => {
+    if (window.confirm("Deseja realmente excluir este colaborador?")) {
+      await deleteDoc(doc(db, "colaboradores", id));
+    }
+  };
+  
+  const handleDeleteSelected = async () => {
+    if (window.confirm(`Deseja realmente excluir ${selected.length} colaborador(es)?`)) {
+        try {
+            const batch = writeBatch(db);
+            selected.forEach(id => {
+                const docRef = doc(db, "colaboradores", id);
+                batch.delete(docRef);
+            });
+            await batch.commit();
+            setSelected([]);
+        } catch (e) {
+            console.error("Erro ao excluir colaboradores: ", e);
+        }
+    }
+  };
 
   const exportToPDF = () => {
     const doc = new jsPDF();
@@ -309,6 +354,17 @@ export const Dashboard = ({ onAddNew }: DashboardProps) => {
           <Typography variant="h5" fontWeight="bold">Colaboradores</Typography>
           
           <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+          {selected.length > 0 && (
+              <Button
+                  variant="outlined"
+                  color="error"
+                  startIcon={<DeleteIcon />}
+                  onClick={handleDeleteSelected}
+                  sx={{ textTransform: 'none', fontWeight: 'bold' }}
+              >
+                  Excluir selecionados
+              </Button>
+            )}
             <Button 
               variant="outlined" 
               color="error" 
@@ -343,11 +399,10 @@ export const Dashboard = ({ onAddNew }: DashboardProps) => {
                 boxShadow: 'none'
               }}
             >
-              New Collaborator
+              Novo Colaborador
             </Button>
           </Box>
-        </Box>
-        
+        </Box>        
         <Box sx={{ 
           display: 'flex', 
           gap: 2, 
@@ -389,6 +444,14 @@ export const Dashboard = ({ onAddNew }: DashboardProps) => {
           <Table sx={{ minWidth: 650 }}>
             <TableHead sx={{ bgcolor: '#f8f9fa' }}>
               <TableRow>
+                <TableCell padding="checkbox">
+                  <Checkbox
+                      color="primary"
+                      indeterminate={selected.length > 0 && selected.length < filteredCollaborators.length}
+                      checked={filteredCollaborators.length > 0 && selected.length === filteredCollaborators.length}
+                      onChange={handleSelectAll}
+                  />
+                </TableCell>
                 <TableCell sx={{ fontWeight: 'bold', color: '#546e7a' }}>Nome</TableCell>
                 <TableCell sx={{ fontWeight: 'bold', color: '#546e7a' }}>Email</TableCell>
                 <TableCell sx={{ fontWeight: 'bold', color: '#546e7a' }}>Departamento</TableCell>
@@ -399,8 +462,17 @@ export const Dashboard = ({ onAddNew }: DashboardProps) => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {filteredCollaborators.map((collaborator) => (
-                <TableRow key={collaborator.id} hover>
+              {filteredCollaborators.map((collaborator) => {
+                const isItemSelected = selected.includes(collaborator.id);
+                return (
+                <TableRow key={collaborator.id} hover selected={isItemSelected}>
+                  <TableCell padding="checkbox">
+                    <Checkbox
+                      color="primary"
+                      checked={isItemSelected}
+                      onChange={(event) => handleSelectOne(event, collaborator.id)}
+                    />
+                  </TableCell>
                   <EditableTableCell 
                     initialValue={collaborator.titulo || ''} 
                     onSave={(newValue) => updateField(collaborator.id, 'titulo', newValue)}
@@ -456,11 +528,11 @@ export const Dashboard = ({ onAddNew }: DashboardProps) => {
                     </IconButton>
                   </TableCell>
                 </TableRow>
-              ))}
+              )})}
               
               {filteredCollaborators.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={5} align="center" sx={{ py: 6, color: '#999' }}>
+                  <TableCell colSpan={8} align="center" sx={{ py: 6, color: '#999' }}>
                     Nenhum colaborador encontrado para esta busca.
                   </TableCell>
                 </TableRow>

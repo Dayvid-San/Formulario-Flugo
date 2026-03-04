@@ -16,16 +16,6 @@ export const MultiStepForm = ({ onCancel }: { onCancel: () => void }) => {
   const [openSuccess, setOpenSuccess] = useState(false);
   const [departmentList, setDepartmentList] = useState<any[]>([]);
 
-  const departmentOptions = [
-    { value: "TI", label: "TI" },
-    { value: "Marketing", label: "Marketing" },
-    { value: "Design", label: "Design" },
-    { value: "Produto", label: "Produto" },
-    { value: "Vendas", label: "Vendas" },
-    { value: "Financeiro", label: "Financeiro" },
-    { value: "Recursos Humanos", label: "Recursos Humanos" },
-  ];
-
   useEffect(() => {
     const unsub = onSnapshot(collection(db, "departamentos"), (snapshot) => {
       setDepartmentList(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
@@ -137,7 +127,7 @@ export const MultiStepForm = ({ onCancel }: { onCancel: () => void }) => {
                 <StepPersonalData onNext={handleNextStep} onCancel={onCancel} data={formData} />
               )}
               {activeStep === 1 && (
-                <StepJobData onNext={handleNextStep} onBack={handleBack} data={formData} departments={departmentOptions} />
+                <StepJobData onNext={handleNextStep} onBack={handleBack} data={formData} departments={departmentList} />
               )}
             </Box>
           </Grid>

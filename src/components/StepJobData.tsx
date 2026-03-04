@@ -4,22 +4,22 @@ import * as z from 'zod';
 import { TextField, Button, Box, Grid, Typography, MenuItem } from '@mui/material';
 
 const jobSchema = z.object({
-  departamento: z.string().min(1, "O departamento é obrigatório"),
-  nivel: z.enum(["Júnior", "Pleno", "Sênior", "Gestor"]),
-  salario: z.number().min(1, "Informe o salário"),
-  dataAdmissao: z.string().min(1, "Informe a data"),
+  department: z.string().min(1, "O departamento é obrigatório"),
+  level: z.enum(["Júnior", "Pleno", "Sênior", "Gestor"]),
+  salary: z.number().min(1, "Informe o salário"),
+  admissionDate: z.string().min(1, "Informe a data"),
 });
 
 type JobFormData = z.infer<typeof jobSchema>;
 
-export const StepJobData = ({ onNext, onBack, data, departamentos }: any) => {
+export const StepJobData = ({ onNext, onBack, data, departments }: any) => {
   const { register, handleSubmit, formState: { errors } } = useForm<JobFormData>({
     resolver: zodResolver(jobSchema),
     defaultValues: {
-      departamento: data?.departamento || "",
-      nivel: data?.nivel || "Júnior",
-      salario: data?.salario || 0,
-      dataAdmissao: data?.dataAdmissao || "",
+      department: data?.department || "",
+      level: data?.level || "Júnior",
+      salary: data?.salary || 0,
+      admissionDate: data?.admissionDate || "",
     }
   });
 
@@ -54,12 +54,12 @@ export const StepJobData = ({ onNext, onBack, data, departamentos }: any) => {
                 select
                 fullWidth 
                 label="Departamento" 
-                {...register('departamento')}
-                error={!!errors.departamento}
-                helperText={errors.departamento?.message}
+                {...register('department')}
+                error={!!errors.department}
+                helperText={errors.department?.message}
                 sx={greenInputStyle}
               >
-                {departamentos.map((dept: any) => (
+                {departments.map((dept: any) => (
                   <MenuItem key={dept.id} value={dept.nome}>{dept.nome}</MenuItem>
                 ))}
               </TextField>
