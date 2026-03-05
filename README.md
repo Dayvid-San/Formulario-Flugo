@@ -5,14 +5,14 @@ Responsivo e fluido, porém ainda com ruído. Pode ser acessado por aqui: https:
 
 ## Funcionalidades Principais
 
-### 1. Dashboard Inteligente
+### Dashboard Inteligente
 
 * **Edição In-place**: Não há necessidade de abrir modais para edições simples. Basta clicar no Nome, Email ou Departamento diretamente na tabela para editar os dados.
 * **Avatar Editável**: O usuário pode clicar no Avatar de um colaborador para carregar uma nova foto do computador. A imagem é convertida para Base64 e salva instantaneamente.
 * **Atualização em Tempo Real**: Graças ao `onSnapshot` do Firebase, qualquer alteração feita por um usuário é refletida para todos os outros sem precisar atualizar a página.
 * **Exclusão**: Botão de ação rápida para remover registros com confirmação de segurança.
 
-### 2. Cadastro em Múltiplas Etapas (Multi-step Form)
+### Cadastro em Múltiplas Etapas (Multi-step Form)
 
 O processo de cadastro foi desenhado para ser intuitivo, evitando a sobrecarga de informações em uma única tela:
 
@@ -20,10 +20,30 @@ O processo de cadastro foi desenhado para ser intuitivo, evitando a sobrecarga d
 * **Passo 2: Informações Profissionais**: Seleção de cargo/departamento via dropdown para manter a integridade dos dados.
 * **Consistência Visual**: Os formulários foram ajustados para manter o alinhamento de botões e campos, garantindo que o layout não "pule" durante a navegação entre etapas.
 
-### 3. Design Responsivo
+### Design Responsivo
 
 * **Mobile-First**: Em dispositivos móveis, a barra lateral (Sidebar) é ocultada automaticamente para priorizar o conteúdo da tabela.
 * **Scroll de Segurança**: A tabela de colaboradores possui rolagem horizontal em telas pequenas, impedindo que os dados fiquem esmagados ou ilegíveis.
+
+### Gestão Avançada e Regras de Negócio
+- **Hierarquia de Gestão**: Implementação de lógica para "Gestor Responsável". O sistema filtra dinamicamente apenas colaboradores com nível "Gestor" para serem selecionados como responsáveis por outros funcionários.
+
+- **Proteção de Registros**: Colaboradores com nível hierárquico de "Gestor" possuem uma trava de segurança que impede sua exclusão acidental, garantindo a integridade da árvore de responsabilidades.
+
+- **Exclusão em Massa**: Interface otimizada para seleção múltipla de registros, permitindo a limpeza de dados em lote com um único comando writeBatch no Firestore.
+
+- **Exportação de Dados**: Funcionalidade integrada para geração de relatórios instantâneos em PDF (via jspdf-autotable) e Excel (via xlsx), facilitando a portabilidade das informações.
+
+
+### Arquitetura e Organização
+
+- **useDashboardData.ts**: Custom Hook que centraliza toda a lógica de estado, filtros, ordenação e comunicação com o Firebase.
+
+- **StatCardsGroup.tsx**: Componente isolado para exibição de métricas como total de colaboradores, média salarial e maior departamento.
+
+- **FilterBar.tsx**: Centraliza a lógica de busca por nome, filtros de departamento e controles de ordenação (asc/desc).
+
+- **ActionSuccessModal.tsx**: Sistema de feedback visual unificado que exibe confirmações elegantes para operações de sucesso ou exclusão.
 
 ## Como Executar o Projeto
 
