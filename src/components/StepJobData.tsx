@@ -59,14 +59,14 @@ export const StepJobData = ({ onNext, onBack, data, departments }: any) => {
   return (
     <Box component="form" onSubmit={handleSubmit(onSubmit)} noValidate>
       <Typography variant="h6" gutterBottom>
-        Job Data
+        Informações Profissionais
       </Typography>
       <Grid container spacing={2}>
         <Grid item xs={12}>
           <TextField
             select
             fullWidth
-            label="Department"
+            label="Departamento"
             {...register('department')}
             error={!!errors.department}
             helperText={errors.department?.message}
@@ -74,9 +74,6 @@ export const StepJobData = ({ onNext, onBack, data, departments }: any) => {
             onChange={(e) => setValue('department', e.target.value, { shouldValidate: true })}
             sx={greenInputStyle}
           >
-            <MenuItem value="">
-              <em>(Primeiro Colaborador/CEO)</em>
-            </MenuItem>
             {departments.map((dept: any) => (
               <MenuItem key={dept.id} value={dept.name || dept.nome}>
                 {dept.name || dept.nome}
@@ -88,7 +85,7 @@ export const StepJobData = ({ onNext, onBack, data, departments }: any) => {
           <TextField
             select
             fullWidth
-            label="Level"
+            label="Senioridade"
             {...register('level')}
             defaultValue="Júnior"
             sx={greenInputStyle}
@@ -102,7 +99,7 @@ export const StepJobData = ({ onNext, onBack, data, departments }: any) => {
           <TextField
             fullWidth
             type="number"
-            label="Salary"
+            label="Salario"
             {...register('salary', { valueAsNumber: true })}
             error={!!errors.salary}
             helperText={errors.salary?.message}
@@ -113,7 +110,7 @@ export const StepJobData = ({ onNext, onBack, data, departments }: any) => {
           <TextField
             fullWidth
             type="date"
-            label="Admission Date"
+            label="Dia de Adimissão"
             InputLabelProps={{ shrink: true }}
             {...register('admissionDate')}
             error={!!errors.admissionDate}
@@ -125,7 +122,7 @@ export const StepJobData = ({ onNext, onBack, data, departments }: any) => {
           <TextField
             select
             fullWidth
-            label="Responsible Manager"
+            label="Gestor"
             {...register('responsibleManager')}
             error={!!errors.responsibleManager}
             helperText={errors.responsibleManager?.message}
@@ -138,10 +135,10 @@ export const StepJobData = ({ onNext, onBack, data, departments }: any) => {
         </Grid>
       </Grid>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
-        <Button variant="contained" onClick={onBack}>
+        <Button variant="contained" sx={{ color: '#ffffff' }} onClick={onBack}>
           Voltar
         </Button>
-        <Button type="submit" variant="contained">
+        <Button type="submit" sx={{ color: '#ffffff' }} variant="contained">
           Próximo
         </Button>
       </Box>

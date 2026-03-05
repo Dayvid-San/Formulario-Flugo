@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword 
-} from 'firebase/auth'; // Importado para criação de conta
+} from 'firebase/auth';
 import { auth } from '../services/firebase';
 import { 
   Box, Typography, TextField, Button, 
@@ -17,7 +17,7 @@ import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import LogoFlugo from '../../public/logo-flugo.png'; 
 
 export const LoginPage = () => {
-  const [isRegistering, setIsRegistering] = useState(false); // Estado para alternar Telas
+  const [isRegistering, setIsRegistering] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -35,10 +35,8 @@ export const LoginPage = () => {
 
     try {
       if (isRegistering) {
-        // Lógica de Criação de Conta
         await createUserWithEmailAndPassword(auth, email, password);
       } else {
-        // Lógica de Login
         await signInWithEmailAndPassword(auth, email, password);
       }
       navigate(from, { replace: true });
@@ -65,7 +63,6 @@ export const LoginPage = () => {
   return (
     <Box sx={{ width: '100vw', height: '100vh', display: 'flex', overflow: 'hidden' }}>
       <Grid container sx={{ width: '100%' }}>
-        {/* Lado Esquerdo: Branding */}
         <Grid item xs={12} md={6} sx={{ 
           bgcolor: '#f5f5f5', 
           display: 'flex', 
@@ -76,11 +73,10 @@ export const LoginPage = () => {
           borderRight: { md: '1px solid #e0e0e0' }
         }}>
           <img src={LogoFlugo} alt="Flugo Logo" style={{ width: '150px', marginBottom: '32px' }} />
-          <Typography variant="h5" color="#666" fontWeight="bold">Gestão de Talentos</Typography>
-          <Typography variant="body1" color="#999" sx={{ mt: 1 }}>Simplificando seu RH.</Typography>
+          <Typography variant="h5" color="#666" fontWeight="bold">Desafio Flugo</Typography>
+          <Typography variant="body1" color="#999" sx={{ mt: 1 }}>Dayvid Santana</Typography>
         </Grid>
 
-        {/* Lado Direito: Formulário Dinâmico */}
         <Grid item xs={12} md={6} sx={{ 
           bgcolor: 'white', 
           display: 'flex', 
@@ -168,6 +164,7 @@ export const LoginPage = () => {
               disabled={loading}
               sx={{ 
                 bgcolor: '#00c853', 
+                color: '#ffffff',
                 '&:hover': { bgcolor: '#00a844' }, 
                 textTransform: 'none', 
                 fontWeight: 'bold', 

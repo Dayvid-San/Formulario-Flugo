@@ -15,6 +15,7 @@ export const MultiStepForm = ({ onCancel }: { onCancel: () => void }) => {
   const [formData, setFormData] = useState({});
   const [openSuccess, setOpenSuccess] = useState(false);
   const [departmentList, setDepartmentList] = useState<any[]>([]);
+  const progressValue = activeStep === 0 ? 0 : 50;
 
   useEffect(() => {
     const unsub = onSnapshot(collection(db, "departamentos"), (snapshot) => {
@@ -56,8 +57,6 @@ export const MultiStepForm = ({ onCancel }: { onCancel: () => void }) => {
       console.error("Error saving to database:", error);
     }
   };
-
-  const progressValue = activeStep === 0 ? 0 : 50;
 
   return (
     <NavbarsLayout>

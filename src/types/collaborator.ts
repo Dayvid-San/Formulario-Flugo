@@ -19,7 +19,6 @@ export interface Collaborator {
   }
   
   export const LEVEL_OPTIONS: SelectOption[] = [
-    { value: 'Estagiário', label: 'Estagiário' },
     { value: 'Júnior', label: 'Júnior' },
     { value: 'Pleno', label: 'Pleno' },
     { value: 'Sênior', label: 'Sênior' },

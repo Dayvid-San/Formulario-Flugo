@@ -17,7 +17,6 @@ interface DashboardProps {
 }
 
 export const Dashboard = ({ onAddNew }: DashboardProps) => {
-  // Extraímos tudo do nosso Custom Hook
   const {
     sortedCollaborators,
     dbDepartments,
