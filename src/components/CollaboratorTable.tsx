@@ -7,9 +7,6 @@ import {
 import DeleteIcon from '@mui/icons-material/Delete';
 import { Collaborator, SortKey, LEVEL_OPTIONS } from '../types/collaborator';
 
-
-
-
 interface CollaboratorTableProps {
   collaborators: Collaborator[];
   selected: string[];
@@ -166,7 +163,7 @@ export const CollaboratorTable = ({
             return (
             <TableRow key={collaborator.id} hover selected={isItemSelected}>
               <TableCell padding="checkbox">
-                <Checkbox color="primary" checked={isItemSelected} onChange={(event) => onSelectOne(event, collaborator.id)} />
+                <Checkbox color="primary" checked={isItemSelected} disabled={collaborator.nivel === 'Gestor'} onChange={(event) => onSelectOne(event, collaborator.id)} />
               </TableCell>
               
               <EditableTableCell 

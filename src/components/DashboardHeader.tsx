@@ -41,7 +41,7 @@ export const DashboardHeader = ({
       body: tableRows,
       startY: 20,
       theme: 'grid',
-      headStyles: { fillColor: [0, 200, 83] } // Verde Flugo
+      headStyles: { fillColor: [0, 200, 83] } 
     });
   
     pdfDoc.text("Relatório de Colaboradores", 14, 15);

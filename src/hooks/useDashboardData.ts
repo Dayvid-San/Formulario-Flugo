@@ -4,18 +4,15 @@ import { db } from "../services/firebase";
 import { Collaborator, SortKey } from '../types/collaborator';
 
 export const useDashboardData = () => {
-  // Estados de Dados
   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
   const [dbDepartments, setDbDepartments] = useState<{ value: string, label: string }[]>([]);
   
-  // Estados de Interface (Filtros/Seleção)
   const [searchTerm, setSearchTerm] = useState('');
   const [departmentFilter, setDepartmentFilter] = useState('Todos');
   const [sortBy, setSortBy] = useState<SortKey>('titulo');
   const [order, setOrder] = useState<'asc' | 'desc'>('asc');
   const [selected, setSelected] = useState<string[]>([]);
 
-  // 1. Escutar Colaboradores no Firebase
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, "colaboradores"), (snapshot) => {
       const list = snapshot.docs.map(doc => ({
@@ -27,7 +24,6 @@ export const useDashboardData = () => {
     return () => unsubscribe();
   }, []);
 
-  // 2. Escutar Departamentos no Firebase
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, "departamentos"), (snapshot) => {
       const list = snapshot.docs.map(doc => ({
@@ -39,7 +35,6 @@ export const useDashboardData = () => {
     return () => unsubscribe();
   }, []);
 
-  // 3. Lógica de Filtro e Busca
   const filteredCollaborators = useMemo(() => {
     return collaborators.filter(collab => {
       const matchesName = collab.titulo?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -48,7 +43,6 @@ export const useDashboardData = () => {
     });
   }, [collaborators, searchTerm, departmentFilter]);
 
-  // 4. Lógica de Ordenação
   const sortedCollaborators = useMemo(() => {
     return [...filteredCollaborators].sort((a, b) => {
       const valueA = a[sortBy];
@@ -66,7 +60,6 @@ export const useDashboardData = () => {
     });
   }, [filteredCollaborators, sortBy, order]);
 
-  // 5. Cálculos de Estatísticas
   const stats = useMemo(() => {
     const total = collaborators.length;
     const avgSalary = total > 0 
@@ -85,7 +78,6 @@ export const useDashboardData = () => {
     return { total, avgSalary, largestDept };
   }, [collaborators]);
 
-  // 6. Ações (Handlers)
   const updateField = async (id: string, field: string, newValue: any) => {
     try {
       await updateDoc(doc(db, "colaboradores", id), {
@@ -98,12 +90,25 @@ export const useDashboardData = () => {
   };
 
   const deleteCollaborator = async (id: string) => {
+    const collab = collaborators.find(c => c.id === id);
+
+    if (collab?.nivel === 'Gestor') {
+      alert("Operação negada: Colaboradores com nível 'Gestor' não podem ser excluídos.");
+      return;
+    }
     if (window.confirm("Deseja realmente excluir este colaborador?")) {
       await deleteDoc(doc(db, "colaboradores", id));
     }
   };
 
   const deleteSelected = async () => {
+    const selectedCollabs = collaborators.filter(c => selected.includes(c.id));
+    const hasManager = selectedCollabs.some(c => c.nivel === 'Gestor');
+
+    if (hasManager) {
+      alert("A seleção contém um ou mais Gestores. Remova-os da seleção para excluir os demais.");
+      return;
+    }
     if (window.confirm(`Excluir ${selected.length} colaborador(es)?`)) {
       const batch = writeBatch(db);
       selected.forEach(id => batch.delete(doc(db, "colaboradores", id)));
@@ -115,17 +120,14 @@ export const useDashboardData = () => {
   const toggleOrder = () => setOrder(prev => prev === 'asc' ? 'desc' : 'asc');
 
   return {
-    // Dados
     sortedCollaborators,
     dbDepartments,
     stats,
-    // Estados de Filtro
     searchTerm, setSearchTerm,
     departmentFilter, setDepartmentFilter,
     sortBy, setSortBy,
     order, toggleOrder,
     selected, setSelected,
-    // Ações
     updateField,
     deleteCollaborator,
     deleteSelected
