@@ -73,8 +73,8 @@ export const LoginPage = () => {
           borderRight: { md: '1px solid #e0e0e0' }
         }}>
           <img src={LogoFlugo} alt="Flugo Logo" style={{ width: '150px', marginBottom: '32px' }} />
-          <Typography variant="h5" color="#666" fontWeight="bold">Desafio Flugo</Typography>
-          <Typography variant="body1" color="#999" sx={{ mt: 1 }}>Dayvid Santana</Typography>
+          <Typography variant="h5" color="#666" fontWeight="bold">Organizador de Equipes</Typography>
+          <Typography variant="body1" color="#999" sx={{ mt: 1 }}>TYTO.club</Typography>
         </Grid>
 
         <Grid item xs={12} md={6} sx={{ 
